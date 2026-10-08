@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>claude-prime</title>
+  <meta name="description" content="claude-prime, projet créé pour le cours du soir vibe coding.">
+  <style>
+    :root {
+      --bg: #f7f7f5;
+      --fg: #1d1d1f;
+      --muted: #6b6b70;
+      --accent: #d97757;
+      --card: #ffffff;
+      --border: #e4e4e0;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #161618;
+        --fg: #f2f2f0;
+        --muted: #9a9aa0;
+        --accent: #e8957a;
+        --card: #1e1e21;
+        --border: #2e2e33;
+      }
+    }
+
+    :root[data-theme="dark"] {
+      --bg: #161618;
+      --fg: #f2f2f0;
+      --muted: #9a9aa0;
+      --accent: #e8957a;
+      --card: #1e1e21;
+      --border: #2e2e33;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    main {
+      width: 100%;
+      max-width: 640px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: clamp(24px, 5vw, 48px);
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.8rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      border-radius: 999px;
+      padding: 2px 12px;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(2rem, 6vw, 2.75rem);
+      line-height: 1.1;
+    }
+
+    .lead {
+      margin: 0 0 24px;
+      color: var(--muted);
+      font-size: 1.1rem;
+    }
+
+    p { margin: 0 0 16px; }
+
+    footer {
+      margin-top: 32px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <span class="badge">Cours du soir</span>
+    <h1>claude-prime</h1>
+    <p class="lead">Créé pour le cours du soir vibe coding.</p>
+    <p>Ce dépôt sert de terrain d'essai pour le premier commit, hébergé sur la version web de Claude Code.</p>
+
+    <footer>Page d'accueil du projet &middot; index.html</footer>
+  </main>
+</body>
+</html>
