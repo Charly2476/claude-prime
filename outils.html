@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Outils · claude-prime</title>
+  <meta name="description" content="Les outils utilisés dans le cours du soir vibe coding.">
+  <style>
+    :root {
+      --bg: #f7f7f5;
+      --fg: #1d1d1f;
+      --muted: #6b6b70;
+      --accent: #d97757;
+      --card: #ffffff;
+      --border: #e4e4e0;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #161618;
+        --fg: #f2f2f0;
+        --muted: #9a9aa0;
+        --accent: #e8957a;
+        --card: #1e1e21;
+        --border: #2e2e33;
+      }
+    }
+
+    :root[data-theme="dark"] {
+      --bg: #161618;
+      --fg: #f2f2f0;
+      --muted: #9a9aa0;
+      --accent: #e8957a;
+      --card: #1e1e21;
+      --border: #2e2e33;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    main {
+      width: 100%;
+      max-width: 640px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: clamp(24px, 5vw, 48px);
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.8rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      border-radius: 999px;
+      padding: 2px 12px;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(2rem, 6vw, 2.75rem);
+      line-height: 1.1;
+    }
+
+    .lead {
+      margin: 0 0 24px;
+      color: var(--muted);
+      font-size: 1.1rem;
+    }
+
+    ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 12px;
+    }
+
+    li {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+    }
+
+    li strong {
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    li a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    li a:hover { text-decoration: underline; }
+
+    li span {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    footer {
+      margin-top: 32px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <span class="badge">Cours du soir</span>
+    <h1>Outils</h1>
+    <p class="lead">Les outils utilisés pendant le cours.</p>
+
+    <ul>
+      <li>
+        <strong>Claude Code</strong>
+        <span>Assistant de code en ligne de commande, utilisé pour écrire et modifier le projet.</span>
+      </li>
+      <li>
+        <strong><a href="https://github.com/Charly2476/claude-prime">GitHub</a></strong>
+        <span>Hébergement du dépôt et historique des modifications (commits, branches, pull requests).</span>
+      </li>
+      <li>
+        <strong><a href="https://git-scm.com/">Git</a></strong>
+        <span>Gestion de versions : chaque modification est enregistrée dans un commit.</span>
+      </li>
+      <li>
+        <strong><a href="https://pages.cloudflare.com/">Cloudflare Pages</a></strong>
+        <span>Publication automatique du site à chaque mise à jour de la branche main.</span>
+      </li>
+    </ul>
+
+    <footer>Page des outils &middot; outils.html</footer>
+  </main>
+</body>
+</html>
