@@ -142,6 +142,35 @@
 
     .muted { color: var(--muted); }
 
+    .toc {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin: 0 0 24px;
+    }
+
+    .toc ol {
+      margin: 8px 0 0;
+      padding-left: 20px;
+      columns: 2;
+      column-gap: 32px;
+    }
+
+    .toc li { margin: 2px 0; }
+
+    .toc a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .toc a:hover { text-decoration: underline; }
+
+    @media (max-width: 640px) {
+      .toc ol { columns: 1; }
+    }
+
+    h2 { scroll-margin-top: 16px; }
+
     footer {
       margin-top: 40px;
       padding-top: 16px;
@@ -159,78 +188,92 @@
 
     <p class="notice"><strong>Sources :</strong> le README du dépôt <a href="https://github.com/Scap-Mehdi/awesome-vibecoding">Scap-Mehdi/awesome-vibecoding</a> (dates de vérification fournies par ce README) et la capture du post de référence. Aucune information venant d'ailleurs n'a été ajoutée. « Voir les tarifs » signifie que le README ne donne pas le prix (il indique « Check pricing »). La capture ne donne ni prix ni date.</p>
 
-    <h2>Code &amp; édition</h2>
+    <nav class="toc" aria-label="Sommaire">
+      <strong>Sommaire</strong>
+      <ol>
+        <li><a href="#code">Code &amp; édition</a></li>
+        <li><a href="#app">App &amp; UI : prototypage</a></li>
+        <li><a href="#contexte">Contexte, specs &amp; intégrations</a></li>
+        <li><a href="#tests">Tests, revue &amp; sécurité</a></li>
+        <li><a href="#deploiement">Déploiement &amp; exécution</a></li>
+        <li><a href="#espaces">Espaces de travail &amp; suivi d'usage</a></li>
+        <li><a href="#inspiration">Inspiration &amp; composants UI</a></li>
+        <li><a href="#liens">Liens d'intérêt</a></li>
+      </ol>
+    </nav>
+
+    <h2 id="code">Code &amp; édition</h2>
     <div class="table-wrap">
       <table>
         <thead>
-          <tr><th>Outil</th><th>Usage</th><th>Accès / périmètre</th><th>Vérifié le</th><th>Lien d'intérêt</th></tr>
+          <tr><th>Outil</th><th>Format</th><th>Usage</th><th>Accès / périmètre</th><th>Vérifié le</th><th>Lien d'intérêt</th></tr>
         </thead>
         <tbody>
           <tr>
-            <td><a href="https://github.com/Aider-AI/aider">Aider</a> (CLI)</td>
+            <td><a href="https://github.com/Aider-AI/aider">Aider</a></td><td>CLI</td>
             <td>Pair programming en terminal, modèles cloud ou locaux, intégration Git</td>
             <td>Client open source ; coûts d'API ou de modèle local</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
           <tr>
-            <td><a href="https://code.claude.com/docs/en/overview">Claude Code</a> (CLI)</td>
+            <td><a href="https://code.claude.com/docs/en/overview">Claude Code</a></td><td>CLI</td>
             <td>Agent de code avec workflows terminal et projet</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
           <tr>
-            <td><a href="https://github.com/cline/cline">Cline</a></td>
+            <td><a href="https://github.com/cline/cline">Cline</a></td><td>—</td>
             <td>Agent pour IDE, terminal et desktop (fichiers, commandes, navigateur)</td>
             <td>Client + fournisseur de modèle ; voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
           <tr>
-            <td><a href="https://www.cursor.com/">Cursor</a> (IDE)</td>
+            <td><a href="https://www.cursor.com/">Cursor</a></td><td>IDE</td>
             <td>Éditeur et agent : implémentation, débogage, revue</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
           <tr>
-            <td><a href="https://github.com/google-gemini/gemini-cli">Gemini CLI</a> (CLI)</td>
+            <td><a href="https://github.com/google-gemini/gemini-cli">Gemini CLI</a></td><td>CLI</td>
             <td>Agent de code open source en terminal</td>
             <td>Clé API, Vertex ou entreprise éligible ; accès grand public retiré</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
           <tr>
-            <td><a href="https://github.com/features/copilot">GitHub Copilot</a></td>
+            <td><a href="https://github.com/features/copilot">GitHub Copilot</a></td><td>—</td>
             <td>Assistance de code dans GitHub et les IDE pris en charge</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
           <tr>
-            <td><a href="https://github.com/aaif-goose/goose">Goose</a> (CLI)</td>
+            <td><a href="https://github.com/aaif-goose/goose">Goose</a></td><td>CLI</td>
             <td>Agent local extensible, interfaces desktop et CLI, outils MCP</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
           <tr>
-            <td><a href="https://kiro.dev">Kiro</a> (IDE)</td>
+            <td><a href="https://kiro.dev">Kiro</a></td><td>IDE</td>
             <td>Agent avec workflows IDE et CLI, spécifications et tests</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
           <tr>
-            <td><a href="https://openai.com/codex/">OpenAI Codex CLI</a> (CLI)</td>
+            <td><a href="https://openai.com/codex/">OpenAI Codex CLI</a></td><td>CLI</td>
             <td>Agent de code qui tourne en local dans le terminal</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
           <tr>
-            <td><a href="https://github.com/earendil-works/pi">Pi</a> (CLI)</td>
+            <td><a href="https://github.com/earendil-works/pi">Pi</a></td><td>CLI</td>
             <td>Agent de code extensible et harnais intégrable</td>
             <td>Client MIT ; conditions du modèle séparées</td>
             <td>2026-09-18</td>
@@ -240,50 +283,50 @@
       </table>
     </div>
 
-    <h2>App &amp; UI : prototypage</h2>
+    <h2 id="app">App &amp; UI : prototypage</h2>
     <div class="table-wrap">
       <table>
         <thead>
-          <tr><th>Outil</th><th>Usage</th><th>Accès / périmètre</th><th>Vérifié le</th><th>Lien d'intérêt</th></tr>
+          <tr><th>Outil</th><th>Format</th><th>Usage</th><th>Accès / périmètre</th><th>Vérifié le</th><th>Lien d'intérêt</th></tr>
         </thead>
         <tbody>
           <tr>
-            <td><a href="https://bolt.new/">Bolt.new</a></td>
+            <td><a href="https://bolt.new/">Bolt.new</a></td><td>Web</td>
             <td>Création d'applications en langage naturel</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
           <tr>
-            <td><a href="https://github.com/dyad-sh/dyad">Dyad</a> (desktop)</td>
+            <td><a href="https://github.com/dyad-sh/dyad">Dyad</a></td><td>Desktop</td>
             <td>Création d'applications en local avec fournisseurs de modèles configurables</td>
             <td>Voir les tarifs ; app locale, coûts du fournisseur de modèle</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
           <tr>
-            <td><a href="https://lovable.dev/">Lovable</a></td>
+            <td><a href="https://lovable.dev/">Lovable</a></td><td>Web</td>
             <td>Génération d'applications full-stack avec Supabase</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
           <tr>
-            <td><a href="https://www.onlook.com/">Onlook</a></td>
+            <td><a href="https://www.onlook.com/">Onlook</a></td><td>Web</td>
             <td>Édition visuelle de l'interface en travaillant le code</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
           <tr>
-            <td><a href="https://replit.com/">Replit</a></td>
+            <td><a href="https://replit.com/">Replit</a></td><td>Web</td>
             <td>Création et itération d'applications avec Replit Agent</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
           <tr>
-            <td><a href="https://v0.app/">v0</a></td>
+            <td><a href="https://v0.app/">v0</a></td><td>Web</td>
             <td>Génération d'interfaces UI/React par Vercel</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
@@ -293,64 +336,64 @@
       </table>
     </div>
 
-    <h2>Contexte, specs &amp; intégrations</h2>
+    <h2 id="contexte">Contexte, specs &amp; intégrations</h2>
     <div class="table-wrap">
       <table>
         <thead>
-          <tr><th>Outil</th><th>Usage</th><th>Accès / périmètre</th><th>Vérifié le</th><th>Lien d'intérêt</th></tr>
+          <tr><th>Outil</th><th>Format</th><th>Usage</th><th>Accès / périmètre</th><th>Vérifié le</th><th>Lien d'intérêt</th></tr>
         </thead>
         <tbody>
           <tr>
-            <td><a href="https://github.com/caliber-ai-org/ai-setup">Caliber</a> (CLI)</td>
+            <td><a href="https://github.com/caliber-ai-org/ai-setup">Caliber</a></td><td>CLI</td>
             <td>Génère et synchronise les configs d'agents IA</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
           <tr>
-            <td><a href="https://github.com/upstash/context7">Context7</a> (MCP)</td>
+            <td><a href="https://github.com/upstash/context7">Context7</a></td><td>MCP</td>
             <td>Documentation des bibliothèques pour le contexte de code</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
           <tr>
-            <td><a href="https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem">Filesystem MCP</a></td>
+            <td><a href="https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem">Filesystem MCP</a></td><td>MCP</td>
             <td>Accès contrôlé aux fichiers du projet</td>
             <td>Voir les tarifs ; implémentation de référence, pas une garantie de production</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
           <tr>
-            <td><a href="https://github.com/github/github-mcp-server">GitHub MCP</a></td>
+            <td><a href="https://github.com/github/github-mcp-server">GitHub MCP</a></td><td>MCP</td>
             <td>Dépôts, issues et pull requests</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
           <tr>
-            <td><a href="https://github.com/neondatabase/mcp-server-neon">Neon</a> (MCP)</td>
+            <td><a href="https://github.com/neondatabase/mcp-server-neon">Neon</a></td><td>MCP</td>
             <td>Workflows de développement avec bases Neon</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
           <tr>
-            <td><a href="https://developers.notion.com/guides/mcp/overview">Notion MCP</a></td>
+            <td><a href="https://developers.notion.com/guides/mcp/overview">Notion MCP</a></td><td>MCP</td>
             <td>MCP hébergé officiel pour lire et mettre à jour Notion</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
           <tr>
-            <td><a href="https://github.com/Fission-AI/OpenSpec">OpenSpec</a></td>
+            <td><a href="https://github.com/Fission-AI/OpenSpec">OpenSpec</a></td><td>—</td>
             <td>Développement piloté par les spécifications</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
           <tr>
-            <td><a href="https://github.com/supabase/mcp">Supabase MCP</a></td>
+            <td><a href="https://github.com/supabase/mcp">Supabase MCP</a></td><td>MCP</td>
             <td>Schémas, requêtes et configuration de projet Supabase</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
@@ -360,57 +403,57 @@
       </table>
     </div>
 
-    <h2>Tests, revue &amp; sécurité</h2>
+    <h2 id="tests">Tests, revue &amp; sécurité</h2>
     <div class="table-wrap">
       <table>
         <thead>
-          <tr><th>Outil</th><th>Usage</th><th>Accès / périmètre</th><th>Vérifié le</th><th>Lien d'intérêt</th></tr>
+          <tr><th>Outil</th><th>Format</th><th>Usage</th><th>Accès / périmètre</th><th>Vérifié le</th><th>Lien d'intérêt</th></tr>
         </thead>
         <tbody>
           <tr>
-            <td><a href="https://github.com/vostride/agent-qa">Agent QA</a> (MCP)</td>
+            <td><a href="https://github.com/vostride/agent-qa">Agent QA</a></td><td>MCP</td>
             <td>Tests web et mobiles en langage naturel</td>
             <td>FSL-1.1-ALv2 : source disponible avec restriction de concurrence ; coûts de modèle</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
           <tr>
-            <td><a href="https://github.com/microsoft/playwright-mcp">Playwright MCP</a> (Microsoft)</td>
+            <td><a href="https://github.com/microsoft/playwright-mcp">Playwright MCP</a> (Microsoft)</td><td>MCP</td>
             <td>Automatisation de navigateur par snapshots structurés</td>
             <td>Client Apache-2.0 ; conditions du modèle séparées</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
           <tr>
-            <td><a href="https://github.com/The-PR-Agent/pr-agent">PR-Agent</a></td>
+            <td><a href="https://github.com/The-PR-Agent/pr-agent">PR-Agent</a></td><td>—</td>
             <td>Relecteur de pull requests maintenu par la communauté</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
           <tr>
-            <td><a href="https://getprbl.com">Prbl</a> (Web)</td>
+            <td><a href="https://getprbl.com">Prbl</a></td><td>Web</td>
             <td>Scan des failles fréquentes du code généré par IA ; GitHub Action</td>
             <td>Scan et Action gratuits ; plans payants pour la réécriture et les dépôts privés ; Python, JS et TS uniquement</td>
             <td>2026-09-23</td>
             <td>Vend des plans payants</td>
           </tr>
           <tr>
-            <td><a href="https://www.qodo.ai">Qodo</a></td>
+            <td><a href="https://www.qodo.ai">Qodo</a></td><td>—</td>
             <td>Moteur de revue de code IA (ex-CodiumAI)</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
           <tr>
-            <td><a href="https://github.com/semgrep/semgrep">Semgrep MCP</a></td>
+            <td><a href="https://github.com/semgrep/semgrep">Semgrep MCP</a></td><td>MCP</td>
             <td>Analyse de sécurité via le CLI Semgrep</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
           <tr>
-            <td><a href="https://github.com/getsentry/sentry-mcp">Sentry</a> (MCP)</td>
+            <td><a href="https://github.com/getsentry/sentry-mcp">Sentry</a></td><td>MCP</td>
             <td>Inspection des erreurs applicatives</td>
             <td>Functional Source License ; source disponible ; vérifier les conditions hébergées</td>
             <td>2026-09-18</td>
@@ -420,36 +463,36 @@
       </table>
     </div>
 
-    <h2>Déploiement &amp; exécution</h2>
+    <h2 id="deploiement">Déploiement &amp; exécution</h2>
     <div class="table-wrap">
       <table>
         <thead>
-          <tr><th>Outil</th><th>Usage</th><th>Accès / périmètre</th><th>Vérifié le</th><th>Lien d'intérêt</th></tr>
+          <tr><th>Outil</th><th>Format</th><th>Usage</th><th>Accès / périmètre</th><th>Vérifié le</th><th>Lien d'intérêt</th></tr>
         </thead>
         <tbody>
           <tr>
-            <td><a href="https://github.com/cloudflare/mcp-server-cloudflare">Cloudflare</a> (MCP)</td>
+            <td><a href="https://github.com/cloudflare/mcp-server-cloudflare">Cloudflare</a></td><td>MCP</td>
             <td>Gestion du déploiement et des ressources cloud</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
           <tr>
-            <td><a href="https://github.com/e2b-dev/E2B">E2B</a></td>
+            <td><a href="https://github.com/e2b-dev/E2B">E2B</a></td><td>—</td>
             <td>Bac à sable cloud sécurisé pour agents</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
           <tr>
-            <td><a href="https://publish.my/">Publish.my</a> (Web)</td>
+            <td><a href="https://publish.my/">Publish.my</a></td><td>Web</td>
             <td>Publication de sites statiques par un agent</td>
             <td>Offre gratuite ; sites statiques seulement ; activation par e-mail</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
           <tr>
-            <td><a href="https://github.com/getsentry/XcodeBuildMCP">XcodeBuildMCP</a> (MCP)</td>
+            <td><a href="https://github.com/getsentry/XcodeBuildMCP">XcodeBuildMCP</a></td><td>MCP</td>
             <td>Build, exécution et débogage de projets Apple</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
@@ -459,64 +502,64 @@
       </table>
     </div>
 
-    <h2>Espaces de travail &amp; suivi d'usage</h2>
+    <h2 id="espaces">Espaces de travail &amp; suivi d'usage</h2>
     <div class="table-wrap">
       <table>
         <thead>
-          <tr><th>Outil</th><th>Usage</th><th>Accès / périmètre</th><th>Vérifié le</th><th>Lien d'intérêt</th></tr>
+          <tr><th>Outil</th><th>Format</th><th>Usage</th><th>Accès / périmètre</th><th>Vérifié le</th><th>Lien d'intérêt</th></tr>
         </thead>
         <tbody>
           <tr>
-            <td><a href="https://delta.dev/">Delta (Zed)</a> (Desktop)</td>
+            <td><a href="https://delta.dev/">Delta (Zed)</a></td><td>Desktop</td>
             <td>Threads d'agents et revue de code dans un espace multijoueur</td>
             <td>Gratuit pendant la bêta publique ; plans payants prévus ; coûts du modèle séparés</td>
             <td>2026-09-20</td>
             <td>Plans payants annoncés comme prévus</td>
           </tr>
           <tr>
-            <td><a href="https://github.com/MusicMaster4/Duckweed">Duckweed</a> (Desktop)</td>
+            <td><a href="https://github.com/MusicMaster4/Duckweed">Duckweed</a></td><td>Desktop</td>
             <td>Agents, shells, diffs Git et sessions en local</td>
             <td>Source disponible ; voir la licence ; coûts du modèle séparés</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
           <tr>
-            <td><a href="https://github.com/lanesket/llm.log">llm.log</a></td>
+            <td><a href="https://github.com/lanesket/llm.log">llm.log</a></td><td>—</td>
             <td>Coûts, tokens et traces des requêtes via un proxy local</td>
             <td>MIT ; coûts du modèle séparés</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
           <tr>
-            <td><a href="https://github.com/johannesjo/parallel-code">Parallel Code</a> (Desktop)</td>
+            <td><a href="https://github.com/johannesjo/parallel-code">Parallel Code</a></td><td>Desktop</td>
             <td>Agents dans des worktrees Git isolés</td>
             <td>MIT ; coûts du modèle séparés</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
           <tr>
-            <td><a href="https://github.com/shep-ai/shep">Shep</a> (CLI)</td>
+            <td><a href="https://github.com/shep-ai/shep">Shep</a></td><td>CLI</td>
             <td>Agents en parallèle jusqu'aux pull requests brouillon</td>
             <td>Client MIT ; abonnement ou coûts d'API de l'agent séparés</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
           <tr>
-            <td><a href="https://github.com/pungme/superagent-desktop">Superagent</a> (Desktop)</td>
+            <td><a href="https://github.com/pungme/superagent-desktop">Superagent</a></td><td>Desktop</td>
             <td>Claude Code ou Codex dans un espace macOS, avec outils navigateur et iOS</td>
             <td>MIT ; macOS Apple Silicon ; abonnement au modèle séparé</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
           <tr>
-            <td><a href="https://github.com/aqua5230/usage">usage</a> (Desktop)</td>
+            <td><a href="https://github.com/aqua5230/usage">usage</a></td><td>Desktop</td>
             <td>Quotas des agents dans la barre de menus macOS ou la zone de notification Windows</td>
             <td>AGPL-3.0 ; coûts du fournisseur séparés</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
           <tr>
-            <td><a href="https://www.warp.dev/terminal">Warp Terminal</a></td>
+            <td><a href="https://www.warp.dev/terminal">Warp Terminal</a></td><td>—</td>
             <td>Terminal orienté agents, pour inspecter les workflows</td>
             <td>Téléchargement du terminal ; vérifier les tarifs de l'IA</td>
             <td>2026-09-18</td>
@@ -526,7 +569,7 @@
       </table>
     </div>
 
-    <h2>Inspiration &amp; composants UI (post de référence)</h2>
+    <h2 id="inspiration">Inspiration &amp; composants UI (post de référence)</h2>
     <p class="muted">Liste issue de la capture du post. Ni prix, ni date, ni conditions d'accès ne figurent dans la source. Les domaines illisibles sur la capture sont signalés.</p>
     <div class="table-wrap">
       <table>
@@ -713,7 +756,7 @@
       </table>
     </div>
 
-    <h2>Liens d'intérêt</h2>
+    <h2 id="liens">Liens d'intérêt</h2>
     <p>Le post recommande en premier une ressource à « 650+ prompts » et son auteur y répond lui-même pour la recommander : c'est de l'auto-promotion. Le README indique que Prbl et Delta vendent ou prévoient des plans payants, et que le README lui-même est maintenu avec Pi.</p>
 
     <footer>Page des outils &middot; outils.html &middot; d'après le README awesome-vibecoding et la capture du post</footer>
