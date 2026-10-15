@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Outils · claude-prime</title>
-  <meta name="description" content="Les outils utilisés dans le cours du soir vibe coding.">
+  <meta name="description" content="Les outils du cours vibe coding : prix indicatifs, conditions d'accès et liens d'intérêt.">
   <style>
     :root {
       --bg: #f7f7f5;
@@ -13,6 +13,8 @@
       --accent: #d97757;
       --card: #ffffff;
       --border: #e4e4e0;
+      --warn: #8a5a00;
+      --warn-bg: #fff4dc;
     }
 
     @media (prefers-color-scheme: dark) {
@@ -23,6 +25,8 @@
         --accent: #e8957a;
         --card: #1e1e21;
         --border: #2e2e33;
+        --warn: #f2c46d;
+        --warn-bg: #3a2f14;
       }
     }
 
@@ -33,6 +37,8 @@
       --accent: #e8957a;
       --card: #1e1e21;
       --border: #2e2e33;
+      --warn: #f2c46d;
+      --warn-bg: #3a2f14;
     }
 
     * { box-sizing: border-box; }
@@ -44,19 +50,17 @@
       color: var(--fg);
       font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       line-height: 1.6;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       padding: 16px;
     }
 
     main {
       width: 100%;
-      max-width: 640px;
+      max-width: 1040px;
+      margin: 0 auto;
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 16px;
-      padding: clamp(24px, 5vw, 48px);
+      padding: clamp(20px, 4vw, 40px);
     }
 
     .badge {
@@ -77,45 +81,69 @@
       line-height: 1.1;
     }
 
+    h2 {
+      margin: 40px 0 8px;
+      font-size: 1.4rem;
+    }
+
     .lead {
-      margin: 0 0 24px;
+      margin: 0 0 16px;
       color: var(--muted);
-      font-size: 1.1rem;
+      font-size: 1.05rem;
     }
 
-    ul {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      display: grid;
-      gap: 12px;
+    .notice {
+      background: var(--warn-bg);
+      color: var(--fg);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--warn);
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 0.95rem;
+      margin: 0 0 24px;
     }
 
-    li {
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 16px 20px;
     }
 
-    li strong {
-      display: block;
-      margin-bottom: 2px;
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+      min-width: 720px;
     }
 
-    li a {
+    th, td {
+      text-align: left;
+      vertical-align: top;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: var(--bg);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    td a {
       color: var(--accent);
       text-decoration: none;
+      font-weight: 600;
     }
 
-    li a:hover { text-decoration: underline; }
+    td a:hover { text-decoration: underline; }
 
-    li span {
-      color: var(--muted);
-      font-size: 0.95rem;
-    }
+    .muted { color: var(--muted); }
 
     footer {
-      margin-top: 32px;
+      margin-top: 40px;
       padding-top: 16px;
       border-top: 1px solid var(--border);
       color: var(--muted);
@@ -127,28 +155,484 @@
   <main>
     <span class="badge">Cours du soir</span>
     <h1>Outils</h1>
-    <p class="lead">Les outils utilisés pendant le cours.</p>
+    <p class="lead">Les outils du cours, avec leur prix indicatif, leurs conditions d'accès et les liens d'intérêt à connaître.</p>
 
-    <ul>
-      <li>
-        <strong>Claude Code</strong>
-        <span>Assistant de code en ligne de commande, utilisé pour écrire et modifier le projet.</span>
-      </li>
-      <li>
-        <strong><a href="https://github.com/Charly2476/claude-prime">GitHub</a></strong>
-        <span>Hébergement du dépôt et historique des modifications (commits, branches, pull requests).</span>
-      </li>
-      <li>
-        <strong><a href="https://git-scm.com/">Git</a></strong>
-        <span>Gestion de versions : chaque modification est enregistrée dans un commit.</span>
-      </li>
-      <li>
-        <strong><a href="https://pages.cloudflare.com/">Cloudflare Pages</a></strong>
-        <span>Publication automatique du site à chaque mise à jour de la branche main.</span>
-      </li>
-    </ul>
+    <p class="notice"><strong>Prix indicatifs, vérifiés le 15 octobre 2026.</strong> Les prix viennent de comparateurs tiers, qui se contredisent souvent. Ils peuvent avoir changé : confirmez-les sur la page officielle de chaque outil avant de payer. « Voir les tarifs » signifie que je n'ai pas pu vérifier le prix.</p>
 
-    <footer>Page des outils &middot; outils.html</footer>
+    <h2>Code &amp; édition</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Outil</th><th>Usage</th><th>Prix indicatif</th><th>Conditions d'accès</th><th>Lien d'intérêt / remarque</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a href="https://code.claude.com/docs/en/overview">Claude Code</a> (CLI)</td>
+            <td>Agent de code en terminal</td>
+            <td>Inclus dans Pro (20 $/mois), Max 5x (100 $/mois) ou Max 20x (200 $/mois), ou au coût de l'API à l'usage</td>
+            <td>Abonnement payant ou clé API ; non inclus dans l'offre gratuite</td>
+            <td>Éditeur de l'assistant qui a rédigé cette page</td>
+          </tr>
+          <tr>
+            <td><a href="https://cursor.com/pricing">Cursor</a> (IDE)</td>
+            <td>Éditeur avec agent</td>
+            <td>Hobby gratuit (limité) ; Pro 20 $/mois ; Pro+ 60 $/mois ; Ultra 200 $/mois ; Teams 40 $/utilisateur/mois (parfois appelé Business)</td>
+            <td>Crédits mensuels ; mode auto illimité ; dépassement possible</td>
+            <td class="muted">Aucun, à ma connaissance</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/features/copilot">GitHub Copilot</a></td>
+            <td>Assistance de code dans les IDE et GitHub</td>
+            <td>Gratuit (offre limitée) ; Pro 10 $/mois ; Pro+ 39 $/mois ; Business 19 $/utilisateur/mois ; Enterprise 39 $/utilisateur/mois</td>
+            <td>Compte GitHub ; requêtes « premium » facturées en crédits depuis juin 2026 (source tierce)</td>
+            <td>Un plan Max à 100 $/mois est cité par une source seulement : non confirmé</td>
+          </tr>
+          <tr>
+            <td><a href="https://cline.bot">Cline</a></td>
+            <td>Agent dans VS Code, terminal et desktop</td>
+            <td>Extension open source gratuite ; vous payez votre fournisseur de modèle. Teams 20 $/mois (à vérifier)</td>
+            <td>Apportez votre clé API (BYOK) ; le plan Teams est une option</td>
+            <td class="muted">Aucun, à ma connaissance</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/Aider-AI/aider">Aider</a> (CLI)</td>
+            <td>Pair programming en terminal avec Git</td>
+            <td>Gratuit (open source) ; coût des API ou d'un modèle local</td>
+            <td>Licence open source ; clé API ou modèle local</td>
+            <td class="muted">Aucun</td>
+          </tr>
+          <tr>
+            <td><a href="https://kiro.dev">Kiro</a> (IDE/CLI)</td>
+            <td>Agent AWS avec spécifications et tests</td>
+            <td>Gratuit (50 crédits) ; Pro 20 $/mois (1 000 crédits) ; Pro+ 40 $ ; Pro Max 100 $ ; Power 200 $ ; dépassement 0,04 $/crédit (sources divergentes)</td>
+            <td>Crédits mensuels ; le coût dépend de la complexité de la requête</td>
+            <td class="muted">Produit d'Amazon Web Services</td>
+          </tr>
+          <tr>
+            <td><a href="https://openai.com/codex/">OpenAI Codex</a> (CLI)</td>
+            <td>Agent de code en terminal</td>
+            <td>Inclus dans ChatGPT Plus (environ 20 $/mois), Pro (100 $ ou 200 $/mois), Business et Enterprise ; ou clé API à l'usage</td>
+            <td>Compte ChatGPT payant ou clé API ; limites d'usage selon le plan</td>
+            <td class="muted">Produit d'OpenAI</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/google-gemini/gemini-cli">Gemini CLI</a></td>
+            <td>Agent de code open source en terminal</td>
+            <td>Voir les tarifs</td>
+            <td>Clé API, Vertex ou entreprise éligible ; l'accès grand public est retiré</td>
+            <td class="muted">Produit de Google</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/aaif-goose/goose">Goose</a></td>
+            <td>Agent local extensible (desktop et CLI)</td>
+            <td>Voir les tarifs</td>
+            <td>Open source ; coûts du modèle séparés</td>
+            <td class="muted">Aucun</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/earendil-works/pi">Pi</a> (CLI)</td>
+            <td>Agent de code extensible en terminal</td>
+            <td>Gratuit (licence MIT)</td>
+            <td>Licence MIT ; conditions du fournisseur de modèle séparées</td>
+            <td class="muted">Aucun</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>App &amp; UI : prototypage</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Outil</th><th>Usage</th><th>Prix indicatif</th><th>Conditions d'accès</th><th>Lien d'intérêt / remarque</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a href="https://lovable.dev">Lovable</a></td>
+            <td>Applications full-stack avec Supabase</td>
+            <td>Gratuit (5 crédits/jour, 30/mois) ; Pro 25 $/mois (100 crédits) ; Business 50 $/mois ; Enterprise sur devis</td>
+            <td>Un seul solde de crédits depuis août 2026 (build, cloud et IA)</td>
+            <td class="muted">Aucun</td>
+          </tr>
+          <tr>
+            <td><a href="https://bolt.new">Bolt.new</a></td>
+            <td>Applications en langage naturel</td>
+            <td>Gratuit (1 M de tokens/mois) ; Pro 25 $/mois (10 M de tokens) ; Teams 30 $/membre/mois ; Enterprise sur devis</td>
+            <td>Facturation au nombre de tokens ; l'export de projet n'est pas inclus dans le gratuit</td>
+            <td class="muted">Aucun</td>
+          </tr>
+          <tr>
+            <td><a href="https://v0.app">v0</a> (Vercel)</td>
+            <td>Génération d'interfaces React</td>
+            <td>Gratuit (environ 5 $ de crédits/mois) ; offre payante d'environ 20 $/mois (à confirmer)</td>
+            <td>Compte Vercel ; déploiement sur Vercel</td>
+            <td class="muted">Éditeur : Vercel</td>
+          </tr>
+          <tr>
+            <td><a href="https://replit.com">Replit</a></td>
+            <td>Création et itération d'applications avec Agent</td>
+            <td>Starter gratuit (1 application publiée) ; Core environ 20 à 25 $/mois ; Pro environ 100 $/mois ; Enterprise sur devis</td>
+            <td>Crédits inclus dans l'abonnement, plus facturation des calculs au-delà</td>
+            <td class="muted">Les tarifs varient selon les sources</td>
+          </tr>
+          <tr>
+            <td><a href="https://www.onlook.com/">Onlook</a></td>
+            <td>Édition visuelle de l'interface en travaillant le code</td>
+            <td>Voir les tarifs</td>
+            <td>Voir le site</td>
+            <td class="muted">Aucun</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/dyad-sh/dyad">Dyad</a> (desktop)</td>
+            <td>Création d'applications en local</td>
+            <td>Voir les tarifs</td>
+            <td>Application locale ; coûts du fournisseur de modèle</td>
+            <td class="muted">Aucun</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Contexte, specs &amp; intégrations (MCP)</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Outil</th><th>Usage</th><th>Prix indicatif</th><th>Conditions d'accès</th><th>Lien d'intérêt / remarque</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a href="https://github.com/upstash/context7">Context7</a> (MCP)</td>
+            <td>Documentation des bibliothèques pour l'agent</td>
+            <td>Voir les tarifs</td>
+            <td>Voir le dépôt et le site</td>
+            <td class="muted">Aucun</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem">Filesystem MCP</a></td>
+            <td>Accès contrôlé aux fichiers du projet</td>
+            <td>Gratuit (référence open source)</td>
+            <td>Implémentation de référence, pas une garantie de production</td>
+            <td class="muted">Aucun</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/github/github-mcp-server">GitHub MCP</a></td>
+            <td>Dépôts, issues et pull requests</td>
+            <td>Serveur gratuit ; usage soumis à votre plan GitHub</td>
+            <td>Jeton GitHub avec les droits voulus</td>
+            <td class="muted">Aucun</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/supabase/mcp">Supabase MCP</a></td>
+            <td>Schémas, requêtes et configuration Supabase</td>
+            <td>Gratuit (500 Mo, 2 projets) ; Pro environ 25 $/mois + usage</td>
+            <td>Projets gratuits mis en pause après une semaine d'inactivité</td>
+            <td class="muted">Voir supabase.com/pricing</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/neondatabase/mcp-server-neon">Neon MCP</a></td>
+            <td>Bases de données Neon</td>
+            <td>Voir les tarifs</td>
+            <td>Compte Neon</td>
+            <td class="muted">Aucun</td>
+          </tr>
+          <tr>
+            <td><a href="https://developers.notion.com/guides/mcp/overview">Notion MCP</a></td>
+            <td>Lire et modifier les contenus Notion</td>
+            <td>Voir les tarifs</td>
+            <td>Compte Notion</td>
+            <td class="muted">Aucun</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/Fission-AI/OpenSpec">OpenSpec</a></td>
+            <td>Développement piloté par les spécifications</td>
+            <td>Voir les tarifs</td>
+            <td>Voir le dépôt</td>
+            <td class="muted">Aucun</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/caliber-ai-org/ai-setup">Caliber</a> (CLI)</td>
+            <td>Génère et synchronise les configs des agents</td>
+            <td>Voir les tarifs</td>
+            <td>Voir le dépôt</td>
+            <td class="muted">Aucun</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Tests, revue &amp; sécurité</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Outil</th><th>Usage</th><th>Prix indicatif</th><th>Conditions d'accès</th><th>Lien d'intérêt / remarque</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a href="https://github.com/microsoft/playwright-mcp">Playwright MCP</a> (Microsoft)</td>
+            <td>Automatisation de navigateur</td>
+            <td>Gratuit (licence Apache-2.0)</td>
+            <td>Les coûts du modèle restent séparés</td>
+            <td class="muted">Aucun</td>
+          </tr>
+          <tr>
+            <td><a href="https://getprbl.com">Prbl</a></td>
+            <td>Scan des failles fréquentes du code généré par IA ; GitHub Action</td>
+            <td>Scan et Action gratuits ; réécriture et dépôts privés en payant</td>
+            <td>Python, JavaScript et TypeScript uniquement</td>
+            <td>Outil commercial : l'éditeur vend les plans payants</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/vostride/agent-qa">Agent QA</a> (MCP)</td>
+            <td>Tests web et mobiles en langage naturel</td>
+            <td>Voir les tarifs ; coûts du modèle</td>
+            <td>FSL-1.1-ALv2 : code disponible, mais usage concurrent restreint</td>
+            <td class="muted">Aucun</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/The-PR-Agent/pr-agent">PR-Agent</a></td>
+            <td>Revue de pull requests</td>
+            <td>Voir les tarifs</td>
+            <td>Projet communautaire, distinct de Qodo</td>
+            <td class="muted">Aucun</td>
+          </tr>
+          <tr>
+            <td><a href="https://www.qodo.ai">Qodo</a></td>
+            <td>Moteur de revue de code par IA</td>
+            <td>Voir les tarifs</td>
+            <td>Voir le site</td>
+            <td class="muted">Aucun</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/semgrep/semgrep">Semgrep MCP</a></td>
+            <td>Analyse de sécurité</td>
+            <td>Voir les tarifs (le CLI Semgrep est open source)</td>
+            <td>Voir le dépôt</td>
+            <td class="muted">Aucun</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/getsentry/sentry-mcp">Sentry MCP</a></td>
+            <td>Inspection des erreurs applicatives</td>
+            <td>Voir les tarifs</td>
+            <td>Functional Source License ; vérifier les conditions hébergées</td>
+            <td class="muted">Aucun</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Déploiement &amp; exécution</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Outil</th><th>Usage</th><th>Prix indicatif</th><th>Conditions d'accès</th><th>Lien d'intérêt / remarque</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a href="https://pages.cloudflare.com/">Cloudflare Pages</a></td>
+            <td>Publication automatique du site à chaque push sur main</td>
+            <td>Gratuit. Limites officielles : 500 builds/mois, 1 build à la fois, 100 domaines par projet, 20 000 fichiers, 25 Mio par fichier ; requêtes statiques illimitées</td>
+            <td>Compte Cloudflare ; builds limités à 20 minutes</td>
+            <td class="muted">Aucun</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/cloudflare/mcp-server-cloudflare">Cloudflare MCP</a></td>
+            <td>Gestion du déploiement et des ressources cloud</td>
+            <td>Voir les tarifs Cloudflare</td>
+            <td>Compte Cloudflare</td>
+            <td class="muted">Aucun</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/e2b-dev/E2B">E2B</a></td>
+            <td>Bac à sable cloud pour agents</td>
+            <td>Voir les tarifs</td>
+            <td>Voir le dépôt et le site</td>
+            <td class="muted">Aucun</td>
+          </tr>
+          <tr>
+            <td><a href="https://publish.my/">Publish.my</a></td>
+            <td>Publication de sites statiques par un agent</td>
+            <td>Offre gratuite</td>
+            <td>Sites statiques seulement ; activation par e-mail</td>
+            <td class="muted">Aucun</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/getsentry/XcodeBuildMCP">XcodeBuildMCP</a></td>
+            <td>Build et débogage de projets Apple</td>
+            <td>Voir les tarifs</td>
+            <td>Voir le dépôt</td>
+            <td class="muted">Aucun</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Espaces de travail &amp; suivi d'usage</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Outil</th><th>Usage</th><th>Prix indicatif</th><th>Conditions d'accès</th><th>Lien d'intérêt / remarque</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a href="https://delta.dev/">Delta (Zed)</a></td>
+            <td>Threads d'agents et revue de code à plusieurs</td>
+            <td>Gratuit pendant la bêta publique ; offres payantes prévues</td>
+            <td>Dépôts Git existants ; coûts du modèle séparés</td>
+            <td class="muted">Aucun</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/shep-ai/shep">Shep</a> (CLI)</td>
+            <td>Agents en parallèle, jusqu'aux pull requests brouillon</td>
+            <td>Gratuit (licence MIT)</td>
+            <td>Abonnement ou API de l'agent à payer séparément</td>
+            <td class="muted">Aucun</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/johannesjo/parallel-code">Parallel Code</a></td>
+            <td>Agents dans des worktrees Git isolés</td>
+            <td>Gratuit (licence MIT)</td>
+            <td>Coûts du modèle séparés</td>
+            <td class="muted">Aucun</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/MusicMaster4/Duckweed">Duckweed</a></td>
+            <td>Agents, shells et diffs Git en local</td>
+            <td>Gratuit (source disponible)</td>
+            <td>Voir la licence ; coûts du modèle séparés</td>
+            <td class="muted">Aucun</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/pungme/superagent-desktop">Superagent</a></td>
+            <td>Claude Code ou Codex dans un espace macOS</td>
+            <td>Gratuit (licence MIT)</td>
+            <td>macOS Apple Silicon ; abonnement au modèle séparé</td>
+            <td class="muted">Aucun</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/lanesket/llm.log">llm.log</a></td>
+            <td>Coûts, tokens et traces des requêtes</td>
+            <td>Gratuit (licence MIT)</td>
+            <td>Proxy local ; coûts du modèle séparés</td>
+            <td class="muted">Aucun</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/aqua5230/usage">usage</a></td>
+            <td>Quotas des agents dans la barre de menus</td>
+            <td>Gratuit (AGPL-3.0)</td>
+            <td>macOS et Windows</td>
+            <td class="muted">Aucun</td>
+          </tr>
+          <tr>
+            <td><a href="https://www.warp.dev/terminal">Warp</a></td>
+            <td>Terminal orienté agents</td>
+            <td>Téléchargement gratuit ; tarifs de l'IA à vérifier</td>
+            <td>Compte Warp pour les fonctions IA</td>
+            <td class="muted">Aucun</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Inspiration &amp; composants UI</h2>
+    <p class="muted">Outils issus de la liste publiée sur X. Je n'ai pas vérifié leurs tarifs, sauf mention contraire.</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Outil</th><th>Usage</th><th>Prix indicatif</th><th>Conditions d'accès</th><th>Lien d'intérêt / remarque</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a href="https://ui.shadcn.com">shadcn/ui</a></td>
+            <td>Composants propres et réutilisables</td>
+            <td>Gratuit (licence MIT)</td>
+            <td>Code à copier dans votre projet</td>
+            <td class="muted">Aucun</td>
+          </tr>
+          <tr>
+            <td><a href="https://magicui.design">Magic UI</a></td>
+            <td>Composants pour applications web modernes</td>
+            <td>Voir le site</td>
+            <td>Voir le site</td>
+            <td class="muted">Non vérifié</td>
+          </tr>
+          <tr>
+            <td><a href="https://ui.aceternity.com">Aceternity UI</a></td>
+            <td>Composants React/Tailwind animés</td>
+            <td>Voir le site</td>
+            <td>Voir le site</td>
+            <td class="muted">Non vérifié</td>
+          </tr>
+          <tr>
+            <td><a href="https://motion-primitives.com">Motion Primitives</a></td>
+            <td>Composants d'animation et d'interaction</td>
+            <td>Voir le site</td>
+            <td>Voir le site</td>
+            <td class="muted">Non vérifié</td>
+          </tr>
+          <tr>
+            <td><a href="https://21st.dev">21st.dev</a></td>
+            <td>Registre de composants branché aux agents via MCP</td>
+            <td>Voir le site</td>
+            <td>Voir le site</td>
+            <td class="muted">Non vérifié</td>
+          </tr>
+          <tr>
+            <td><a href="https://mobbin.com">Mobbin</a></td>
+            <td>Parcours d'applications réelles</td>
+            <td>Pro environ 14 $/mois ; Team environ 16 $/mois (sources divergentes)</td>
+            <td>Le plan Pro ne couvre que les applications et sites « essentiels » (selon une source)</td>
+            <td class="muted">Non vérifié sur le site officiel</td>
+          </tr>
+          <tr>
+            <td><a href="https://awwwards.com">Awwwards</a></td>
+            <td>Sites primés</td>
+            <td>Voir le site</td>
+            <td>Voir le site</td>
+            <td class="muted">Non vérifié</td>
+          </tr>
+          <tr>
+            <td><a href="https://shadertoy.com">Shadertoy</a></td>
+            <td>Shaders à étudier et remixer</td>
+            <td>Gratuit</td>
+            <td>Compte pour publier</td>
+            <td class="muted">Aucun</td>
+          </tr>
+          <tr>
+            <td><a href="https://animejs.com">Anime.js</a></td>
+            <td>Bibliothèque JavaScript d'animation légère</td>
+            <td>Gratuit (licence MIT)</td>
+            <td>Bibliothèque open source</td>
+            <td class="muted">Aucun</td>
+          </tr>
+          <tr>
+            <td><a href="https://www.godly.website">Godly</a></td>
+            <td>Sites soigneusement sélectionnés</td>
+            <td>Voir le site</td>
+            <td>Voir le site</td>
+            <td class="muted">Non vérifié</td>
+          </tr>
+          <tr>
+            <td><a href="https://minimal.gallery">Minimal Gallery</a></td>
+            <td>Sites épurés sélectionnés</td>
+            <td>Voir le site</td>
+            <td>Voir le site</td>
+            <td class="muted">Non vérifié</td>
+          </tr>
+          <tr>
+            <td><a href="https://3dicons.co">3Dicons</a></td>
+            <td>Icônes 3D pour interfaces</td>
+            <td>Voir le site (gratuit annoncé)</td>
+            <td>Voir le site</td>
+            <td class="muted">Non vérifié</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Liens d'intérêt</h2>
+    <p>Un post populaire liste des ressources en recommandant en premier un site à « 650+ prompts ». L'auteur y répond lui-même pour le recommander : il s'agit d'une auto-promotion, à prendre comme telle. Pour la même raison, cette page ne classe pas les outils par préférence.</p>
+
+    <footer>Page des outils &middot; outils.html &middot; prix vérifiés le 15 octobre 2026</footer>
   </main>
 </body>
 </html>
