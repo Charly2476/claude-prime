@@ -90,6 +90,50 @@
       font-weight: 600;
     }
 
+    .fx-link {
+      display: inline-block;
+      text-decoration: none;
+      color: var(--accent);
+    }
+
+    /* Colour tokens: override to re-skin the effect.
+       --ink    main text colour (defaults to currentColor)
+       --ink-2  primary accent   --ink-3  secondary accent */
+    :root { --ink: currentColor; --ink-2: #FF4FD8; --ink-3: #4FF8FF; }
+
+    /* Teletype: typewriter with blinking caret.
+       --n is the number of characters; set it inline for any word. */
+    .fx-typewriter {
+      --n: 10;
+      box-sizing: content-box;
+      font: 600 24px/1.2 "JetBrains Mono", monospace;
+      letter-spacing: 0;
+      color: var(--ink);
+      white-space: nowrap;
+      overflow: hidden;
+      width: calc(var(--n) * 1ch);
+      border-right: .55ch solid var(--ink-2);
+      animation: fx-type 3.6s steps(var(--n)) infinite,
+                 fx-caret .65s steps(1) infinite;
+    }
+
+    @keyframes fx-type {
+      0%, 8%    { width: 0; }
+      55%, 100% { width: calc(var(--n) * 1ch); }
+    }
+
+    @keyframes fx-caret {
+      50% { border-color: transparent; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .fx-typewriter {
+        animation: none;
+        width: calc(var(--n) * 1ch);
+        border-right-color: transparent;
+      }
+    }
+
     footer {
       margin-top: 32px;
       padding-top: 16px;
@@ -106,7 +150,11 @@
     <p class="lead">Salut les copains !</p>
     <p class="lead">Créé pour le cours du soir vibe coding.</p>
     <p>Ce dépôt sert de terrain d'essai pour le premier commit, hébergé sur la version web de Claude Code.</p>
-    <p><a href="outils.html">Voir la page des outils &rarr;</a></p>
+    <p>
+      <a class="fx-link" href="outils.html" aria-label="Voir la page des outils">
+        <div class="fx-typewriter" style="--n: 6">OUTILS</div>
+      </a>
+    </p>
 
     <footer>Page d'accueil du projet &middot; index.html</footer>
   </main>
