@@ -1,9 +1,13 @@
-// Configuration du Worker de l'API des outils (claude-prime).
-// Aucun secret ici. Les deux réglages d'Access se font dans le tableau de bord
-// (Workers & Pages > claude-prime-api > Settings > Variables) :
-//   ACCESS_TEAM_DOMAIN  ex. "mon-equipe.cloudflareaccess.com"
-//   ACCESS_AUD          le « Application Audience (AUD) Tag » de l'application Access
-// Tant qu'ils manquent, toute modification est refusée.
+// Réglages du Worker de l'API des outils (claude-prime).
+// Aucun secret ici.
+//
+// À régler dans le tableau de bord (Workers & Pages > claude-prime-api > Settings > Variables and Secrets),
+// gardés à chaque déploiement grâce à "keep_vars" :
+//   ACCESS_TEAM_DOMAIN    variable  ex. "mon-equipe.cloudflareaccess.com"
+//   ACCESS_AUD            variable  « Application Audience (AUD) Tag » de l'application Access
+//   TURNSTILE_SITE_KEY    variable  clé publique du widget Turnstile (facultatif)
+//   TURNSTILE_SECRET_KEY  SECRET    clé secrète Turnstile (facultatif, jamais dans le dépôt)
+// Sans Access : toute modification est refusée. Turnstile s'ajoute à Access, il ne le remplace pas.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "claude-prime-api",
@@ -14,11 +18,16 @@
   // Cloudflare Pages, via la liaison de service API (functions/api/[[path]].js).
   "workers_dev": false,
   "preview_urls": false,
-
-  // Garde les variables réglées dans le tableau de bord lors d'un déploiement.
   "keep_vars": true,
 
+  // DATA = le câble entre le Worker et le bucket R2.
   "r2_buckets": [
-    { "binding": "OUTILS", "bucket_name": "formation-s4-donnees-mon-groupe" }
-  ]
+    { "binding": "DATA", "bucket_name": "formation-s4-donnees-mon-groupe" }
+  ],
+
+  "vars": {
+    "ALLOWED_ORIGIN": "https://claude-prime-c6r.pages.dev",
+    "TURNSTILE_HOSTNAME": "claude-prime-c6r.pages.dev",
+    "TURNSTILE_ACTION": "soumission"
+  }
 }

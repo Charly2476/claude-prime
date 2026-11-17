@@ -1,8 +1,8 @@
 // claude-prime-api : enregistre les fiches et les commentaires de outils.html dans R2.
 //
-// Stockage R2 (liaison OUTILS) :
-//   fiches/<outilId>.json                         une fiche par outil (avec "version")
-//   commentaires/<outilId>/<horodatage>-<uuid>.json  un objet par commentaire
+// Stockage R2 (liaison DATA) :
+//   outils/<outilId>.json               une fiche par outil (avec "version"), ex. outils/outil-001.json
+//   commentaires/<outilId>/<uuid>.json  un objet par commentaire
 //
 // Routes (la page les appelle sur son propre domaine, via functions/api/[[path]].js) :
 //   GET  /api/outils                          lecture publique des fiches et commentaires
@@ -15,6 +15,9 @@
 // Protection : tout ce qui écrit exige un jeton Cloudflare Access valide, vérifié ICI
 // (signature RS256, audience, émetteur, expiration). Si ACCESS_TEAM_DOMAIN ou ACCESS_AUD
 // ne sont pas réglés, toute écriture est refusée (édition désactivée).
+// En plus (pas à la place) : l'origine doit être ALLOWED_ORIGIN, et si Turnstile est réglé
+// (TURNSTILE_SITE_KEY + secret TURNSTILE_SECRET_KEY), chaque soumission doit porter un jeton
+// Turnstile valide pour TURNSTILE_ACTION et TURNSTILE_HOSTNAME.
 
 export const SECTIONS = ['code', 'app', 'contexte', 'tests', 'deploiement', 'espaces', 'inspiration'];
 export const TYPES_PERSO = ['texte', 'booleen', 'date', 'liste', 'url'];
@@ -37,7 +40,7 @@ export const LIMITES = {
   initNombre: 500,
 };
 
-const ID_OUTIL = /^o-[a-z0-9]{6,32}$/;
+const ID_OUTIL = /^outil-\d{3,6}$/;
 const DATE_ISO = /^\d{4}-\d{2}-\d{2}$/;
 const CHAMPS = ['section', 'nom', 'mention', 'url', 'format', 'usage', 'acces', 'verifieLe', 'lienInteret'];
 
@@ -186,13 +189,52 @@ async function lireCorps(request) {
 
 // ---------- Authentification Cloudflare Access ----------
 
-export function editionConfiguree(env) {
+function accessConfigure(env) {
   return (
     typeof env.ACCESS_TEAM_DOMAIN === 'string' &&
     /^[a-z0-9-]+\.cloudflareaccess\.com$/.test(env.ACCESS_TEAM_DOMAIN) &&
     typeof env.ACCESS_AUD === 'string' &&
     /^[a-f0-9]{32,128}$/.test(env.ACCESS_AUD)
   );
+}
+
+// Turnstile : 'actif' (clé publique + secret), 'absent' (aucun des deux) ou 'incomplet'.
+function etatTurnstile(env) {
+  const site = !!env.TURNSTILE_SITE_KEY;
+  const secret = !!env.TURNSTILE_SECRET_KEY;
+  if (site && secret) return 'actif';
+  return site || secret ? 'incomplet' : 'absent';
+}
+
+export function editionConfiguree(env) {
+  return accessConfigure(env) && etatTurnstile(env) !== 'incomplet';
+}
+
+const actionTurnstile = (env) => env.TURNSTILE_ACTION || 'soumission';
+
+// Vérifie le jeton Turnstile auprès de Cloudflare. Renvoie null si OK, sinon un message.
+async function verifierTurnstile(request, env) {
+  if (etatTurnstile(env) !== 'actif') return null;
+  const jeton = request.headers.get('cf-turnstile-response');
+  if (!jeton || jeton.length > 2048) return 'Vérification anti-robot manquante.';
+  const form = new FormData();
+  form.append('secret', env.TURNSTILE_SECRET_KEY);
+  form.append('response', jeton);
+  const ip = request.headers.get('cf-connecting-ip');
+  if (ip) form.append('remoteip', ip);
+  let resultat;
+  try {
+    const r = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', { method: 'POST', body: form });
+    resultat = await r.json();
+  } catch {
+    return 'Vérification anti-robot indisponible pour le moment.';
+  }
+  if (!resultat || resultat.success !== true) return 'Vérification anti-robot refusée.';
+  if (resultat.action !== actionTurnstile(env)) return 'Vérification anti-robot : action inattendue.';
+  if (env.TURNSTILE_HOSTNAME && resultat.hostname !== env.TURNSTILE_HOSTNAME) {
+    return 'Vérification anti-robot : site inattendu.';
+  }
+  return null;
 }
 
 const cacheCles = { equipe: null, cles: [], expire: 0 };
@@ -264,8 +306,11 @@ function lireCookie(request, nom) {
 
 // Renvoie { utilisateur } ou { reponse } (refus déjà construit).
 async function exigerUtilisateur(request, env) {
-  if (!editionConfiguree(env)) {
+  if (!accessConfigure(env)) {
     return { reponse: erreur(503, 'Modification désactivée : protection Cloudflare Access non configurée.') };
+  }
+  if (etatTurnstile(env) === 'incomplet') {
+    return { reponse: erreur(503, 'Modification désactivée : Turnstile à moitié configuré (clé publique ou secret manquant).') };
   }
   const jeton = request.headers.get('cf-access-jwt-assertion') || lireCookie(request, 'CF_Authorization');
   if (!jeton) return { reponse: erreur(401, 'Connexion requise.') };
@@ -280,14 +325,16 @@ async function exigerUtilisateur(request, env) {
 }
 
 // Bloque les écritures venant d'un autre site (le navigateur envoie Origin).
-function origineAutorisee(request) {
+// ALLOWED_ORIGIN = adresse réelle du site, ex. https://claude-prime-c6r.pages.dev
+function origineAutorisee(request, env) {
   const origine = request.headers.get('origin');
-  return !origine || origine === new URL(request.url).origin;
+  if (!origine) return true;
+  return origine === (env.ALLOWED_ORIGIN || new URL(request.url).origin);
 }
 
 // ---------- R2 ----------
 
-const cleFiche = (id) => `fiches/${id}.json`;
+const cleFiche = (id) => `outils/${id}.json`;
 const prefixeCommentaires = (id) => `commentaires/${id}/`;
 
 async function listerCles(bucket, prefixe) {
@@ -310,12 +357,12 @@ async function lireJson(bucket, cle) {
 
 async function lireTout(env) {
   const [clesFiches, clesCommentaires] = await Promise.all([
-    listerCles(env.OUTILS, 'fiches/'),
-    listerCles(env.OUTILS, 'commentaires/'),
+    listerCles(env.DATA, 'outils/'),
+    listerCles(env.DATA, 'commentaires/'),
   ]);
   const [fiches, commentaires] = await Promise.all([
-    Promise.all(clesFiches.map((c) => lireJson(env.OUTILS, c))),
-    Promise.all(clesCommentaires.map((c) => lireJson(env.OUTILS, c))),
+    Promise.all(clesFiches.map((c) => lireJson(env.DATA, c))),
+    Promise.all(clesCommentaires.map((c) => lireJson(env.DATA, c))),
   ]);
   const parFiche = {};
   for (const f of fiches) if (f) parFiche[f.donnees.outilId] = f.donnees;
@@ -325,7 +372,10 @@ async function lireTout(env) {
     (parOutil[c.donnees.outilId] ||= []).push(c.donnees);
   }
   for (const liste of Object.values(parOutil)) liste.sort((a, b) => a.creeLe.localeCompare(b.creeLe));
-  return json({ editionActive: editionConfiguree(env), fiches: parFiche, commentaires: parOutil });
+  const turnstile = editionConfiguree(env) && etatTurnstile(env) === 'actif'
+    ? { siteKey: env.TURNSTILE_SITE_KEY, action: actionTurnstile(env) }
+    : null;
+  return json({ editionActive: editionConfiguree(env), turnstile, fiches: parFiche, commentaires: parOutil });
 }
 
 async function initialiser(request, env, utilisateur) {
@@ -352,7 +402,7 @@ async function initialiser(request, env, utilisateur) {
   for (const f of propres) {
     const fiche = { ...f, version: 1, creeLe: maintenant, majLe: maintenant, majPar: utilisateur.email };
     // If-None-Match: * => R2 n'écrit que si l'objet n'existe pas encore. Jamais d'écrasement.
-    const ecrit = await env.OUTILS.put(cleFiche(f.outilId), JSON.stringify(fiche), {
+    const ecrit = await env.DATA.put(cleFiche(f.outilId), JSON.stringify(fiche), {
       onlyIf: new Headers({ 'if-none-match': '*' }),
       httpMetadata: { contentType: 'application/json' },
     });
@@ -368,7 +418,7 @@ async function modifier(request, env, utilisateur, id) {
   const champs = validerChamps(corps.champs);
   const perso = validerPerso(corps.perso ?? []);
 
-  const actuelle = await lireJson(env.OUTILS, cleFiche(id));
+  const actuelle = await lireJson(env.DATA, cleFiche(id));
   if (!actuelle) return erreur(404, "Fiche absente : lancez d'abord l'initialisation.");
   if (actuelle.donnees.version !== corps.version) {
     return erreur(409, "Conflit : la fiche a été modifiée entre-temps. Rien n'a été écrasé.", {
@@ -384,12 +434,12 @@ async function modifier(request, env, utilisateur, id) {
     majPar: utilisateur.email,
   };
   // etagMatches => l'écriture échoue si quelqu'un a écrit entre la lecture et ici.
-  const ecrit = await env.OUTILS.put(cleFiche(id), JSON.stringify(nouvelle), {
+  const ecrit = await env.DATA.put(cleFiche(id), JSON.stringify(nouvelle), {
     onlyIf: { etagMatches: actuelle.etag },
     httpMetadata: { contentType: 'application/json' },
   });
   if (!ecrit) {
-    const recente = await lireJson(env.OUTILS, cleFiche(id));
+    const recente = await lireJson(env.DATA, cleFiche(id));
     return erreur(409, "Conflit : la fiche a été modifiée entre-temps. Rien n'a été écrasé.", {
       fiche: recente?.donnees ?? null,
     });
@@ -401,13 +451,13 @@ async function commenter(request, env, utilisateur, id) {
   const corps = await lireCorps(request);
   objetStrict(corps, 'corps', ['texte']);
   const contenu = texte(corps.texte, 'texte', LIMITES.commentaire, { vide: false });
-  if (!(await env.OUTILS.head(cleFiche(id)))) {
+  if (!(await env.DATA.head(cleFiche(id)))) {
     return erreur(404, "Fiche absente : lancez d'abord l'initialisation.");
   }
   const creeLe = new Date().toISOString();
   const commentaireId = crypto.randomUUID();
   const commentaire = { id: commentaireId, outilId: id, texte: contenu, auteur: utilisateur.email, creeLe };
-  await env.OUTILS.put(`${prefixeCommentaires(id)}${creeLe}-${commentaireId}.json`, JSON.stringify(commentaire), {
+  await env.DATA.put(`${prefixeCommentaires(id)}${commentaireId}.json`, JSON.stringify(commentaire), {
     onlyIf: new Headers({ 'if-none-match': '*' }),
     httpMetadata: { contentType: 'application/json' },
   });
@@ -430,7 +480,7 @@ export async function traiter(request, env) {
 
   if (!pathname.startsWith('/api/edit/')) return erreur(404, 'Introuvable.');
 
-  if (methode !== 'GET' && !origineAutorisee(request)) return erreur(403, 'Origine refusée.');
+  if (methode !== 'GET' && !origineAutorisee(request, env)) return erreur(403, 'Origine refusée.');
   const { utilisateur, reponse } = await exigerUtilisateur(request, env);
   if (reponse) return reponse;
 
@@ -447,8 +497,11 @@ export async function traiter(request, env) {
   if (m) {
     const id = m[1];
     if (!ID_OUTIL.test(id)) return erreur(400, 'Identifiant d’outil invalide.');
-    if (!m[2] && methode === 'PUT') return modifier(request, env, utilisateur, id);
-    if (m[2] && methode === 'POST') return commenter(request, env, utilisateur, id);
+    if ((!m[2] && methode === 'PUT') || (m[2] && methode === 'POST')) {
+      const refus = await verifierTurnstile(request, env);
+      if (refus) return erreur(403, refus);
+      return m[2] ? commenter(request, env, utilisateur, id) : modifier(request, env, utilisateur, id);
+    }
   }
   return erreur(404, 'Introuvable.');
 }

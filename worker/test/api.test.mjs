@@ -12,7 +12,7 @@ const AUD = 'a1b2c3d4'.repeat(8);
 const SITE = 'https://claude-prime-test.pages.dev';
 const SCRIPT = fileURLToPath(new URL('../index.js', import.meta.url));
 
-let mf, mfSansAccess, cle, autreCle;
+let mf, mfSansAccess, mfTurnstile, mfDemiTurnstile, cle, autreCle;
 
 const b64url = (buf) => Buffer.from(buf).toString('base64url');
 
@@ -39,12 +39,23 @@ function creerMiniflare(bindings) {
     modules: true,
     scriptPath: SCRIPT,
     compatibilityDate: '2026-07-01',
-    r2Buckets: ['OUTILS'],
+    r2Buckets: ['DATA'],
     bindings,
     // Remplace l'appel réseau vers les certificats Access par la clé publique de test.
-    outboundService: (requete) => {
+    outboundService: async (requete) => {
       if (requete.url === `https://${EQUIPE}/cdn-cgi/access/certs`) {
         return new Response(JSON.stringify({ keys: [cle.jwk] }), { headers: { 'content-type': 'application/json' } });
+      }
+      // Faux service Turnstile : le jeton décrit la réponse voulue.
+      if (requete.url === 'https://challenges.cloudflare.com/turnstile/v0/siteverify') {
+        const f = await requete.formData();
+        if (f.get('secret') !== 'secret-de-test') return Response.json({ success: false });
+        const reponses = {
+          bon: { success: true, action: 'soumission', hostname: 'claude-prime-c6r.pages.dev' },
+          'mauvaise-action': { success: true, action: 'autre', hostname: 'claude-prime-c6r.pages.dev' },
+          'mauvais-site': { success: true, action: 'soumission', hostname: 'evil.test' },
+        };
+        return Response.json(reponses[f.get('response')] ?? { success: false });
       }
       return new Response('bloqué', { status: 599 });
     },
@@ -77,19 +88,29 @@ const ficheBase = (outilId, nom, url) => ({
   perso: [],
 });
 
-const A = 'o-aaaaaa01';
-const B = 'o-bbbbbb02';
+const A = 'outil-001';
+const B = 'outil-002';
 
 before(async () => {
   cle = await genererCle('cle-test');
   autreCle = await genererCle('cle-test'); // même kid, autre clé : signature invalide
   mf = creerMiniflare({ ACCESS_TEAM_DOMAIN: EQUIPE, ACCESS_AUD: AUD });
   mfSansAccess = creerMiniflare({});
+  const prod = {
+    ACCESS_TEAM_DOMAIN: EQUIPE, ACCESS_AUD: AUD,
+    ALLOWED_ORIGIN: 'https://claude-prime-c6r.pages.dev',
+    TURNSTILE_HOSTNAME: 'claude-prime-c6r.pages.dev', TURNSTILE_ACTION: 'soumission',
+    TURNSTILE_SITE_KEY: 'cle-publique-de-test',
+  };
+  mfTurnstile = creerMiniflare({ ...prod, TURNSTILE_SECRET_KEY: 'secret-de-test' });
+  mfDemiTurnstile = creerMiniflare(prod); // clé publique sans secret
 });
 
 after(async () => {
   await mf.dispose();
   await mfSansAccess.dispose();
+  await mfTurnstile.dispose();
+  await mfDemiTurnstile.dispose();
 });
 
 test('sans protection configurée : lecture OK, édition désactivée (503)', async () => {
@@ -294,13 +315,63 @@ test('envois invalides refusés (400/403/404), rien écrit', async () => {
   assert.equal((await appel('PUT', `/api/edit/outils/${A}`, { corps: { ...base, champs: { ...a.champs, usage: 'x'.repeat(70000) } } })).statut, 400);
   assert.equal((await appel('PUT', `/api/edit/outils/${A}`, { corps: base, entetes: { origin: 'https://evil.test' } })).statut, 403);
   assert.equal((await appel('PUT', '/api/edit/outils/..%2Fpirate', { corps: base })).statut, 400);
-  assert.equal((await appel('PUT', '/api/edit/outils/o-inconnu99', { corps: base })).statut, 404);
+  assert.equal((await appel('PUT', '/api/edit/outils/outil-999', { corps: base })).statut, 404);
   assert.equal((await appel('POST', `/api/edit/outils/${A}/commentaires`, { corps: { texte: '' } })).statut, 400);
   assert.equal((await appel('POST', `/api/edit/outils/${A}/commentaires`, { corps: { texte: 'x'.repeat(2001) } })).statut, 400);
-  assert.equal((await appel('POST', '/api/edit/outils/o-inconnu99/commentaires', { corps: { texte: 'x' } })).statut, 404);
+  assert.equal((await appel('POST', '/api/edit/outils/outil-999/commentaires', { corps: { texte: 'x' } })).statut, 404);
   assert.equal((await appel('POST', '/api/edit/init', { corps: { fiches: [{ ...ficheBase('mauvais id', 'X', 'https://x.test') }] } })).statut, 400);
 
   const relue = (await appel('GET', '/api/outils', { auth: false })).d;
   assert.deepEqual(relue.fiches[A], a);
   assert.equal(relue.commentaires[A].length, 2);
+});
+
+test('R2 : une fiche par outil dans outils/, un objet par commentaire dans commentaires/<outilId>/', async () => {
+  const cles = (await (await mf.getR2Bucket('DATA')).list()).objects.map((o) => o.key);
+  assert.ok(cles.includes('outils/outil-001.json'));
+  assert.ok(cles.includes('outils/outil-002.json'));
+  const coms = cles.filter((c) => c.startsWith('commentaires/'));
+  assert.equal(coms.length, 2);
+  for (const c of coms) assert.match(c, /^commentaires\/outil-001\/[0-9a-f-]{36}\.json$/);
+  assert.equal(cles.length, 4);
+});
+
+test('Turnstile à moitié réglé (clé publique sans secret) : édition désactivée', async () => {
+  const lecture = await appel('GET', '/api/outils', { instance: mfDemiTurnstile, auth: false });
+  assert.equal(lecture.d.editionActive, false);
+  assert.equal(lecture.d.turnstile, null);
+  const r = await appel('POST', '/api/edit/init', { corps: { fiches: [] }, instance: mfDemiTurnstile });
+  assert.equal(r.statut, 503);
+});
+
+test('ALLOWED_ORIGIN et Turnstile : en plus de Access, pas à la place', async () => {
+  const site = { origin: 'https://claude-prime-c6r.pages.dev' };
+  const lecture = await appel('GET', '/api/outils', { instance: mfTurnstile, auth: false });
+  assert.deepEqual(lecture.d.turnstile, { siteKey: 'cle-publique-de-test', action: 'soumission' });
+
+  const init = await appel('POST', '/api/edit/init', {
+    instance: mfTurnstile, entetes: site, corps: { fiches: [ficheBase(A, 'Outil A', 'https://a.test')] },
+  });
+  assert.equal(init.statut, 200);
+  const fiche = (await appel('GET', '/api/outils', { instance: mfTurnstile, auth: false })).d.fiches[A];
+  const corps = { version: fiche.version, champs: { ...fiche.champs, usage: 'via Turnstile' }, perso: [] };
+  const put = (entetes, auth = true) => appel('PUT', `/api/edit/outils/${A}`, { instance: mfTurnstile, corps, entetes, auth });
+
+  assert.equal((await put({ ...site, origin: SITE, 'cf-turnstile-response': 'bon' })).statut, 403, 'autre origine');
+  assert.equal((await put(site)).statut, 403, 'sans jeton Turnstile');
+  for (const t of ['faux', 'mauvaise-action', 'mauvais-site']) {
+    assert.equal((await put({ ...site, 'cf-turnstile-response': t })).statut, 403, t);
+  }
+  assert.equal((await put({ ...site, 'cf-turnstile-response': 'bon' }, false)).statut, 401, 'Turnstile seul ne suffit pas');
+  assert.equal((await appel('POST', `/api/edit/outils/${A}/commentaires`, { instance: mfTurnstile, entetes: site, corps: { texte: 'x' } })).statut, 403);
+
+  assert.equal((await put({ ...site, 'cf-turnstile-response': 'bon' })).statut, 200);
+  const com = await appel('POST', `/api/edit/outils/${A}/commentaires`, {
+    instance: mfTurnstile, entetes: { ...site, 'cf-turnstile-response': 'bon' }, corps: { texte: 'ok' },
+  });
+  assert.equal(com.statut, 201);
+  const relue = (await appel('GET', '/api/outils', { instance: mfTurnstile, auth: false })).d;
+  assert.equal(relue.fiches[A].champs.usage, 'via Turnstile');
+  assert.equal(relue.fiches[A].version, 2);
+  assert.equal(relue.commentaires[A].length, 1);
 });

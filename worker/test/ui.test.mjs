@@ -37,7 +37,7 @@ async function jeton(email = 'charles@example.test') {
 
 function miniflare(bindings, jwk) {
   return new Miniflare({
-    modules: true, scriptPath: SCRIPT, compatibilityDate: '2026-07-01', r2Buckets: ['OUTILS'], bindings,
+    modules: true, scriptPath: SCRIPT, compatibilityDate: '2026-07-01', r2Buckets: ['DATA'], bindings,
     outboundService: (r) => r.url.endsWith('/cdn-cgi/access/certs')
       ? new Response(JSON.stringify({ keys: [jwk] }))
       : new Response('bloqué', { status: 599 }),
