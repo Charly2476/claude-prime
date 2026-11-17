@@ -5,15 +5,19 @@
 //   commentaires/<outilId>/<uuid>.json  un objet par commentaire
 //
 // Routes (la page les appelle sur son propre domaine, via functions/api/[[path]].js) :
-//   GET  /api/outils                          lecture publique des fiches et commentaires
-//   GET  /api/edit/session                    qui est connecté (protégé)
-//   GET  /api/edit/connexion?retour=/...      passe par Cloudflare Access puis revient (protégé)
-//   POST /api/edit/init                       crée les fiches absentes, n'écrase jamais (protégé)
-//   PUT  /api/edit/outils/:id                 modifie une fiche, contrôle de version (protégé)
-//   POST /api/edit/outils/:id/commentaires    ajoute un commentaire (protégé)
+//   GET  /api/outils                          lire la liste (fiches + commentaires), public
+//   PUT  /api/outils/outil-001                modifier un outil, contrôle de version (connexion requise)
+//   GET  /api/outils/outil-001/commentaires   lire ses commentaires, public
+//   POST /api/outils/outil-001/commentaires   ajouter un commentaire (connexion requise)
+// Connexion (chemin couvert par l'application Cloudflare Access) :
+//   GET  /api/edit/connexion?retour=/...      passe par Access (pose le cookie) puis revient
+//   GET  /api/edit/session                    qui est connecté
+//   POST /api/edit/init                       crée les fiches absentes, n'écrase jamais
+// Le navigateur ne donne qu'un identifiant (outil-NNN) : le serveur construit les chemins R2.
 //
 // Protection : tout ce qui écrit exige un jeton Cloudflare Access valide, vérifié ICI
-// (signature RS256, audience, émetteur, expiration). Si ACCESS_TEAM_DOMAIN ou ACCESS_AUD
+// (signature RS256, audience, émetteur, expiration), lu dans l'en-tête Cf-Access-Jwt-Assertion
+// ou dans le cookie CF_Authorization posé par Access lors de la connexion. Si ACCESS_TEAM_DOMAIN ou ACCESS_AUD
 // ne sont pas réglés, toute écriture est refusée (édition désactivée).
 // En plus (pas à la place) : l'origine doit être ALLOWED_ORIGIN, et si Turnstile est réglé
 // (TURNSTILE_SITE_KEY + secret TURNSTILE_SECRET_KEY), chaque soumission doit porter un jeton
@@ -464,6 +468,15 @@ async function commenter(request, env, utilisateur, id) {
   return json({ commentaire }, 201);
 }
 
+async function lireCommentaires(env, id) {
+  if (!(await env.DATA.head(cleFiche(id)))) return erreur(404, 'Outil inconnu.');
+  const cles = await listerCles(env.DATA, prefixeCommentaires(id));
+  const objets = await Promise.all(cles.map((c) => lireJson(env.DATA, c)));
+  const commentaires = objets.filter(Boolean).map((o) => o.donnees);
+  commentaires.sort((a, b) => a.creeLe.localeCompare(b.creeLe));
+  return json({ outilId: id, commentaires });
+}
+
 function retourSur(valeur) {
   // Seulement un chemin du même site : pas de redirection vers un autre domaine.
   return typeof valeur === 'string' && /^\/(?![/\\])[^\s]*$/.test(valeur) ? valeur : '/outils.html';
@@ -473,11 +486,31 @@ export async function traiter(request, env) {
   const { pathname, searchParams } = new URL(request.url);
   const methode = request.method;
 
+  // ----- Lire la liste -----
   if (pathname === '/api/outils') {
     if (methode !== 'GET') return erreur(405, 'Méthode non autorisée.');
     return lireTout(env);
   }
 
+  // ----- Un outil : /api/outils/<id> et /api/outils/<id>/commentaires -----
+  const m = pathname.match(/^\/api\/outils\/([^/]+)(\/commentaires)?$/);
+  if (m) {
+    const id = m[1];
+    if (!ID_OUTIL.test(id)) return erreur(400, 'Identifiant d’outil invalide.');
+    const commentaires = !!m[2];
+    if (commentaires && methode === 'GET') return lireCommentaires(env, id);
+    const ecriture = (!commentaires && methode === 'PUT') || (commentaires && methode === 'POST');
+    if (!ecriture) return erreur(405, 'Méthode non autorisée.');
+
+    if (!origineAutorisee(request, env)) return erreur(403, 'Origine refusée.');
+    const { utilisateur, reponse } = await exigerUtilisateur(request, env);
+    if (reponse) return reponse;
+    const refus = await verifierTurnstile(request, env);
+    if (refus) return erreur(403, refus);
+    return commentaires ? commenter(request, env, utilisateur, id) : modifier(request, env, utilisateur, id);
+  }
+
+  // ----- Connexion et initialisation (chemin protégé par Cloudflare Access) -----
   if (!pathname.startsWith('/api/edit/')) return erreur(404, 'Introuvable.');
 
   if (methode !== 'GET' && !origineAutorisee(request, env)) return erreur(403, 'Origine refusée.');
@@ -492,16 +525,6 @@ export async function traiter(request, env) {
   }
   if (pathname === '/api/edit/init' && methode === 'POST') {
     return initialiser(request, env, utilisateur);
-  }
-  const m = pathname.match(/^\/api\/edit\/outils\/([^/]+)(\/commentaires)?$/);
-  if (m) {
-    const id = m[1];
-    if (!ID_OUTIL.test(id)) return erreur(400, 'Identifiant d’outil invalide.');
-    if ((!m[2] && methode === 'PUT') || (m[2] && methode === 'POST')) {
-      const refus = await verifierTurnstile(request, env);
-      if (refus) return erreur(403, refus);
-      return m[2] ? commenter(request, env, utilisateur, id) : modifier(request, env, utilisateur, id);
-    }
   }
   return erreur(404, 'Introuvable.');
 }

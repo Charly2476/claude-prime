@@ -1373,7 +1373,7 @@
       if (jeton === null) { zoneErreur.textContent = 'Validez d’abord la vérification anti-robot.'; return; }
       const { id, version } = ficheOuverte;
       zoneErreur.textContent = 'Enregistrement…';
-      const { statut, d } = await envoyer('PUT', `/edit/outils/${encodeURIComponent(id)}`, { version, champs, perso }, jeton);
+      const { statut, d } = await envoyer('PUT', `/outils/${encodeURIComponent(id)}`, { version, champs, perso }, jeton);
       relancerTurnstile('turnstile-fiche');
       if (statut === 200) {
         etat.fiches[id] = d.fiche;
@@ -1396,16 +1396,33 @@
     const formCom = document.getElementById('form-commentaire');
     let comOuvert = null;
 
+    function montrerCommentaires(id) {
+      document.getElementById('commentaires-existants').replaceChildren(...listeCommentaires(etat.commentaires[id] || []).children);
+    }
+
+    // Relit les commentaires de cet outil (GET /api/outils/<id>/commentaires).
+    async function rafraichirCommentaires(id) {
+      try {
+        const r = await fetch(`${API}/outils/${encodeURIComponent(id)}/commentaires`, { cache: 'no-store' });
+        const d = r.ok ? await r.json() : null;
+        if (!d || !Array.isArray(d.commentaires)) return;
+        etat.commentaires[id] = d.commentaires;
+        afficherLigne(id);
+        if (comOuvert === id && dlgCom.open) montrerCommentaires(id);
+      } catch { /* on garde la liste déjà chargée */ }
+    }
+
     function ouvrirCommentaire(id) {
       const fiche = etat.fiches[id];
       if (!fiche) return;
       comOuvert = id;
       document.getElementById('dlg-commentaire-titre').textContent = `Ajouter un commentaire : ${fiche.champs.nom}`;
-      document.getElementById('commentaires-existants').replaceChildren(...listeCommentaires(etat.commentaires[id] || []).children);
+      montrerCommentaires(id);
       document.getElementById('commentaire-erreur').textContent = '';
       formCom.elements.texte.value = '';
       dlgCom.showModal();
       preparerTurnstile('turnstile-commentaire');
+      rafraichirCommentaires(id);
     }
 
     formCom.addEventListener('submit', async (e) => {
@@ -1417,7 +1434,7 @@
       if (jeton === null) { zoneErreur.textContent = 'Validez d’abord la vérification anti-robot.'; return; }
       zoneErreur.textContent = 'Publication…';
       const id = comOuvert;
-      const { statut, d } = await envoyer('POST', `/edit/outils/${encodeURIComponent(id)}/commentaires`, { texte }, jeton);
+      const { statut, d } = await envoyer('POST', `/outils/${encodeURIComponent(id)}/commentaires`, { texte }, jeton);
       relancerTurnstile('turnstile-commentaire');
       if (statut === 201) {
         (etat.commentaires[id] ||= []).push(d.commentaire);

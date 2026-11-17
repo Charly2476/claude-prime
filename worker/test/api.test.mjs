@@ -119,8 +119,8 @@ test('sans protection configurée : lecture OK, édition désactivée (503)', as
   assert.equal(lecture.d.editionActive, false);
   for (const [m, c, corps] of [
     ['POST', '/api/edit/init', { fiches: [] }],
-    ['PUT', `/api/edit/outils/${A}`, { version: 1, champs: ficheBase(A, 'A', 'https://a.test').champs, perso: [] }],
-    ['POST', `/api/edit/outils/${A}/commentaires`, { texte: 'x' }],
+    ['PUT', `/api/outils/${A}`, { version: 1, champs: ficheBase(A, 'A', 'https://a.test').champs, perso: [] }],
+    ['POST', `/api/outils/${A}/commentaires`, { texte: 'x' }],
   ]) {
     const r = await appel(m, c, { corps, instance: mfSansAccess });
     assert.equal(r.statut, 503, `${m} ${c}`);
@@ -173,7 +173,7 @@ test('initialisation : crée les fiches absentes, puis ne les écrase jamais', a
   // On modifie A, puis on relance l'initialisation avec l'ancienne liste.
   const lecture = await appel('GET', '/api/outils', { auth: false });
   const a = lecture.d.fiches[A];
-  const maj = await appel('PUT', `/api/edit/outils/${A}`, {
+  const maj = await appel('PUT', `/api/outils/${A}`, {
     corps: { version: a.version, champs: { ...a.champs, usage: 'Usage modifié' }, perso: [] },
   });
   assert.equal(maj.statut, 200);
@@ -211,7 +211,7 @@ test('modifier chaque champ et des champs personnalisés typés, puis relire', a
     { cle: 'Note', type: 'texte', valeur: 'à revoir' },
     { cle: 'Docs', type: 'url', valeur: 'http://docs.a.test' },
   ];
-  const r = await appel('PUT', `/api/edit/outils/${A}`, { corps: { version: avant.version, champs, perso } });
+  const r = await appel('PUT', `/api/outils/${A}`, { corps: { version: avant.version, champs, perso } });
   assert.equal(r.statut, 200);
   assert.equal(r.d.fiche.version, avant.version + 1);
   assert.equal(r.d.fiche.majPar, 'charles@example.test');
@@ -225,7 +225,7 @@ test('modifier chaque champ et des champs personnalisés typés, puis relire', a
   assert.equal(relue.outilId, A);
 
   // Remettre des valeurs vides possibles (null) fonctionne aussi.
-  const vide = await appel('PUT', `/api/edit/outils/${A}`, {
+  const vide = await appel('PUT', `/api/outils/${A}`, {
     corps: { version: relue.version, champs: { ...champs, format: null, acces: null, verifieLe: null, lienInteret: null, mention: '' }, perso: [] },
   });
   assert.equal(vide.statut, 200);
@@ -234,8 +234,8 @@ test('modifier chaque champ et des champs personnalisés typés, puis relire', a
 
 test('commenter A sans toucher B', async () => {
   const avant = (await appel('GET', '/api/outils', { auth: false })).d;
-  const r1 = await appel('POST', `/api/edit/outils/${A}/commentaires`, { corps: { texte: 'Premier sur A <script>alert(1)</script>' } });
-  const r2 = await appel('POST', `/api/edit/outils/${A}/commentaires`, { corps: { texte: 'Deuxième sur A' } });
+  const r1 = await appel('POST', `/api/outils/${A}/commentaires`, { corps: { texte: 'Premier sur A <script>alert(1)</script>' } });
+  const r2 = await appel('POST', `/api/outils/${A}/commentaires`, { corps: { texte: 'Deuxième sur A' } });
   assert.equal(r1.statut, 201);
   assert.equal(r2.statut, 201);
   assert.equal(r1.d.commentaire.auteur, 'charles@example.test');
@@ -248,7 +248,7 @@ test('commenter A sans toucher B', async () => {
 
 test("changer l'URL de A sans perdre ses commentaires", async () => {
   const a = (await appel('GET', '/api/outils', { auth: false })).d.fiches[A];
-  const r = await appel('PUT', `/api/edit/outils/${A}`, {
+  const r = await appel('PUT', `/api/outils/${A}`, {
     corps: { version: a.version, champs: { ...a.champs, url: 'https://ailleurs.test/' }, perso: a.perso },
   });
   assert.equal(r.statut, 200);
@@ -259,9 +259,9 @@ test("changer l'URL de A sans perdre ses commentaires", async () => {
 
 test('conflit de version : signalé (409), rien écrasé', async () => {
   const a = (await appel('GET', '/api/outils', { auth: false })).d.fiches[A];
-  const ok = await appel('PUT', `/api/edit/outils/${A}`, { corps: { version: a.version, champs: { ...a.champs, usage: 'Version de Léa' }, perso: [] } });
+  const ok = await appel('PUT', `/api/outils/${A}`, { corps: { version: a.version, champs: { ...a.champs, usage: 'Version de Léa' }, perso: [] } });
   assert.equal(ok.statut, 200);
-  const conflit = await appel('PUT', `/api/edit/outils/${A}`, { corps: { version: a.version, champs: { ...a.champs, usage: 'Version de Tom' }, perso: [] } });
+  const conflit = await appel('PUT', `/api/outils/${A}`, { corps: { version: a.version, champs: { ...a.champs, usage: 'Version de Tom' }, perso: [] } });
   assert.equal(conflit.statut, 409);
   assert.equal(conflit.d.fiche.champs.usage, 'Version de Léa');
   const relue = (await appel('GET', '/api/outils', { auth: false })).d.fiches[A];
@@ -272,7 +272,7 @@ test('conflit simultané : deux écritures en même temps, une seule passe', asy
   const b = (await appel('GET', '/api/outils', { auth: false })).d.fiches[B];
   const envois = await Promise.all(
     ['un', 'deux', 'trois', 'quatre'].map((n) =>
-      appel('PUT', `/api/edit/outils/${B}`, { corps: { version: b.version, champs: { ...b.champs, usage: n }, perso: [] } }),
+      appel('PUT', `/api/outils/${B}`, { corps: { version: b.version, champs: { ...b.champs, usage: n }, perso: [] } }),
     ),
   );
   const statuts = envois.map((e) => e.statut).sort();
@@ -307,18 +307,18 @@ test('envois invalides refusés (400/403/404), rien écrit', async () => {
     ['version absente', { champs: a.champs, perso: [] }],
   ];
   for (const [nom, corps] of cas) {
-    const r = await appel('PUT', `/api/edit/outils/${A}`, { corps: JSON.parse(JSON.stringify(corps)) });
+    const r = await appel('PUT', `/api/outils/${A}`, { corps: JSON.parse(JSON.stringify(corps)) });
     assert.equal(r.statut, 400, `${nom} → ${r.statut} ${JSON.stringify(r.d)}`);
   }
-  assert.equal((await appel('PUT', `/api/edit/outils/${A}`, { corps: 'pas du json' })).statut, 400);
-  assert.equal((await appel('PUT', `/api/edit/outils/${A}`, { corps: base, entetes: { 'content-type': 'text/plain' } })).statut, 400);
-  assert.equal((await appel('PUT', `/api/edit/outils/${A}`, { corps: { ...base, champs: { ...a.champs, usage: 'x'.repeat(70000) } } })).statut, 400);
-  assert.equal((await appel('PUT', `/api/edit/outils/${A}`, { corps: base, entetes: { origin: 'https://evil.test' } })).statut, 403);
-  assert.equal((await appel('PUT', '/api/edit/outils/..%2Fpirate', { corps: base })).statut, 400);
-  assert.equal((await appel('PUT', '/api/edit/outils/outil-999', { corps: base })).statut, 404);
-  assert.equal((await appel('POST', `/api/edit/outils/${A}/commentaires`, { corps: { texte: '' } })).statut, 400);
-  assert.equal((await appel('POST', `/api/edit/outils/${A}/commentaires`, { corps: { texte: 'x'.repeat(2001) } })).statut, 400);
-  assert.equal((await appel('POST', '/api/edit/outils/outil-999/commentaires', { corps: { texte: 'x' } })).statut, 404);
+  assert.equal((await appel('PUT', `/api/outils/${A}`, { corps: 'pas du json' })).statut, 400);
+  assert.equal((await appel('PUT', `/api/outils/${A}`, { corps: base, entetes: { 'content-type': 'text/plain' } })).statut, 400);
+  assert.equal((await appel('PUT', `/api/outils/${A}`, { corps: { ...base, champs: { ...a.champs, usage: 'x'.repeat(70000) } } })).statut, 400);
+  assert.equal((await appel('PUT', `/api/outils/${A}`, { corps: base, entetes: { origin: 'https://evil.test' } })).statut, 403);
+  assert.equal((await appel('PUT', '/api/outils/..%2Fpirate', { corps: base })).statut, 400);
+  assert.equal((await appel('PUT', '/api/outils/outil-999', { corps: base })).statut, 404);
+  assert.equal((await appel('POST', `/api/outils/${A}/commentaires`, { corps: { texte: '' } })).statut, 400);
+  assert.equal((await appel('POST', `/api/outils/${A}/commentaires`, { corps: { texte: 'x'.repeat(2001) } })).statut, 400);
+  assert.equal((await appel('POST', '/api/outils/outil-999/commentaires', { corps: { texte: 'x' } })).statut, 404);
   assert.equal((await appel('POST', '/api/edit/init', { corps: { fiches: [{ ...ficheBase('mauvais id', 'X', 'https://x.test') }] } })).statut, 400);
 
   const relue = (await appel('GET', '/api/outils', { auth: false })).d;
@@ -355,7 +355,7 @@ test('ALLOWED_ORIGIN et Turnstile : en plus de Access, pas à la place', async (
   assert.equal(init.statut, 200);
   const fiche = (await appel('GET', '/api/outils', { instance: mfTurnstile, auth: false })).d.fiches[A];
   const corps = { version: fiche.version, champs: { ...fiche.champs, usage: 'via Turnstile' }, perso: [] };
-  const put = (entetes, auth = true) => appel('PUT', `/api/edit/outils/${A}`, { instance: mfTurnstile, corps, entetes, auth });
+  const put = (entetes, auth = true) => appel('PUT', `/api/outils/${A}`, { instance: mfTurnstile, corps, entetes, auth });
 
   assert.equal((await put({ ...site, origin: SITE, 'cf-turnstile-response': 'bon' })).statut, 403, 'autre origine');
   assert.equal((await put(site)).statut, 403, 'sans jeton Turnstile');
@@ -363,10 +363,10 @@ test('ALLOWED_ORIGIN et Turnstile : en plus de Access, pas à la place', async (
     assert.equal((await put({ ...site, 'cf-turnstile-response': t })).statut, 403, t);
   }
   assert.equal((await put({ ...site, 'cf-turnstile-response': 'bon' }, false)).statut, 401, 'Turnstile seul ne suffit pas');
-  assert.equal((await appel('POST', `/api/edit/outils/${A}/commentaires`, { instance: mfTurnstile, entetes: site, corps: { texte: 'x' } })).statut, 403);
+  assert.equal((await appel('POST', `/api/outils/${A}/commentaires`, { instance: mfTurnstile, entetes: site, corps: { texte: 'x' } })).statut, 403);
 
   assert.equal((await put({ ...site, 'cf-turnstile-response': 'bon' })).statut, 200);
-  const com = await appel('POST', `/api/edit/outils/${A}/commentaires`, {
+  const com = await appel('POST', `/api/outils/${A}/commentaires`, {
     instance: mfTurnstile, entetes: { ...site, 'cf-turnstile-response': 'bon' }, corps: { texte: 'ok' },
   });
   assert.equal(com.statut, 201);
@@ -374,4 +374,41 @@ test('ALLOWED_ORIGIN et Turnstile : en plus de Access, pas à la place', async (
   assert.equal(relue.fiches[A].champs.usage, 'via Turnstile');
   assert.equal(relue.fiches[A].version, 2);
   assert.equal(relue.commentaires[A].length, 1);
+});
+
+test('routes des consignes : GET des commentaires d’un outil (public)', async () => {
+  const r = await appel('GET', `/api/outils/${A}/commentaires`, { auth: false });
+  assert.equal(r.statut, 200);
+  assert.equal(r.d.outilId, A);
+  assert.deepEqual(r.d.commentaires.map((c) => c.texte), ['Premier sur A <script>alert(1)</script>', 'Deuxième sur A']);
+  const b = await appel('GET', `/api/outils/${B}/commentaires`, { auth: false });
+  assert.deepEqual(b.d.commentaires, []);
+  assert.equal((await appel('GET', '/api/outils/outil-999/commentaires', { auth: false })).statut, 404);
+  assert.equal((await appel('GET', '/api/outils/..%2Foutils/commentaires', { auth: false })).statut, 400);
+});
+
+test('routes des consignes : écriture avec le cookie CF_Authorization seul', async () => {
+  const a = (await appel('GET', '/api/outils', { auth: false })).d.fiches[A];
+  const corps = { version: a.version, champs: { ...a.champs, usage: 'via cookie' }, perso: a.perso };
+  const r = await appel('PUT', `/api/outils/${A}`, { corps, auth: false, entetes: { cookie: `autre=1; CF_Authorization=${await jeton()}` } });
+  assert.equal(r.statut, 200);
+  const c = await appel('POST', `/api/outils/${A}/commentaires`, {
+    corps: { texte: 'commentaire via cookie' }, auth: false, entetes: { cookie: `CF_Authorization=${await jeton()}` },
+  });
+  assert.equal(c.statut, 201);
+  const faux = await appel('PUT', `/api/outils/${A}`, { corps, auth: false, entetes: { cookie: 'CF_Authorization=abc.def.ghi' } });
+  assert.equal(faux.statut, 401);
+});
+
+test('routes des consignes : méthodes non prévues refusées, anciennes routes absentes', async () => {
+  const a = (await appel('GET', '/api/outils', { auth: false })).d.fiches[A];
+  const corps = { version: a.version, champs: a.champs, perso: [] };
+  assert.equal((await appel('POST', '/api/outils', { corps })).statut, 405);
+  assert.equal((await appel('GET', `/api/outils/${A}`, { auth: false })).statut, 405);
+  assert.equal((await appel('DELETE', `/api/outils/${A}`)).statut, 405);
+  assert.equal((await appel('PUT', `/api/outils/${A}/commentaires`, { corps })).statut, 405);
+  assert.equal((await appel('PUT', `/api/edit/outils/${A}`, { corps })).statut, 404);
+  assert.equal((await appel('POST', '/api/soumissions', { corps: {} })).statut, 404);
+  assert.equal((await appel('PUT', `/api/outils/${A}`, { corps, auth: false })).statut, 401);
+  assert.equal((await appel('POST', `/api/outils/${A}/commentaires`, { corps: { texte: 'x' }, auth: false })).statut, 401);
 });
