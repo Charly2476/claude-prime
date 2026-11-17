@@ -19,6 +19,6 @@
   "keep_vars": true,
 
   "r2_buckets": [
-    { "binding": "OUTILS", "bucket_name": "claude-prime-outils" }
+    { "binding": "OUTILS", "bucket_name": "formation-s4-donnees-mon-groupe" }
   ]
 }
