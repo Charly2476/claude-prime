@@ -8,9 +8,9 @@
 # Ce workflow ne publie PAS le site : outils.html et index.html restent publiés comme avant
 # par Cloudflare Pages (projet claude-prime, branche main) et par GitHub Pages.
 #
-# Secrets du dépôt (Settings > Secrets and variables > Actions), aucune valeur ici :
-#   CLOUDFLARE_API_TOKEN   jeton Cloudflare avec « Workers Scripts: Edit »
-#   CLOUDFLARE_ACCOUNT_ID  identifiant du compte Cloudflare
+# Réglages du dépôt (Settings > Secrets and variables > Actions), aucune valeur ici :
+#   Secrets   > CLOUDFLARE_API_TOKEN   jeton Cloudflare avec « Workers Scripts: Edit »
+#   Variables > CLOUDFLARE_ACCOUNT_ID  identifiant du compte Cloudflare (pas un secret)
 name: Worker API
 
 on:
@@ -75,18 +75,18 @@ jobs:
       - name: Installer exactement les versions de package-lock.json
         run: npm ci
 
-      - name: Vérifier que les secrets existent (sans les afficher)
+      - name: Vérifier que le secret et la variable existent (sans les afficher)
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           manque=0
           [ -n "$CLOUDFLARE_API_TOKEN" ] || { echo "::error::Secret CLOUDFLARE_API_TOKEN absent"; manque=1; }
-          [ -n "$CLOUDFLARE_ACCOUNT_ID" ] || { echo "::error::Secret CLOUDFLARE_ACCOUNT_ID absent"; manque=1; }
+          [ -n "$CLOUDFLARE_ACCOUNT_ID" ] || { echo "::error::Variable CLOUDFLARE_ACCOUNT_ID absente (onglet Variables)"; manque=1; }
           exit $manque
 
       - name: Déployer claude-prime-api
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
         run: npx wrangler deploy
