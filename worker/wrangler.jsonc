@@ -5,7 +5,6 @@
 // gardés à chaque déploiement grâce à "keep_vars" :
 //   ACCESS_TEAM_DOMAIN    variable  ex. "mon-equipe.cloudflareaccess.com"
 //   ACCESS_AUD            variable  « Application Audience (AUD) Tag » de l'application Access
-//   TURNSTILE_SITE_KEY    variable  clé publique du widget Turnstile (facultatif)
 //   TURNSTILE_SECRET_KEY  SECRET    clé secrète Turnstile (facultatif, jamais dans le dépôt)
 // Sans Access : toute modification est refusée. Turnstile s'ajoute à Access, il ne le remplace pas.
 {
@@ -28,6 +27,9 @@
   "vars": {
     "ALLOWED_ORIGIN": "https://claude-prime-c6r.pages.dev",
     "TURNSTILE_HOSTNAME": "claude-prime-c6r.pages.dev",
-    "TURNSTILE_ACTION": "soumission"
+    "TURNSTILE_ACTION": "soumission",
+    // Clé PUBLIQUE du widget Turnstile (visible dans la page, ce n'est pas un secret).
+    // La clé secrète va dans le tableau de bord, en secret TURNSTILE_SECRET_KEY.
+    "TURNSTILE_SITE_KEY": "0x4AAAAAAGF1tOqlaW4TV6Ka"
   }
 }
