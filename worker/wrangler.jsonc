@@ -1,0 +1,24 @@
+// Configuration du Worker de l'API des outils (claude-prime).
+// Aucun secret ici. Les deux réglages d'Access se font dans le tableau de bord
+// (Workers & Pages > claude-prime-api > Settings > Variables) :
+//   ACCESS_TEAM_DOMAIN  ex. "mon-equipe.cloudflareaccess.com"
+//   ACCESS_AUD          le « Application Audience (AUD) Tag » de l'application Access
+// Tant qu'ils manquent, toute modification est refusée.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "claude-prime-api",
+  "main": "index.js",
+  "compatibility_date": "2026-07-01",
+
+  // Pas d'adresse publique *.workers.dev : le Worker n'est joint que par le site
+  // Cloudflare Pages, via la liaison de service API (functions/api/[[path]].js).
+  "workers_dev": false,
+  "preview_urls": false,
+
+  // Garde les variables réglées dans le tableau de bord lors d'un déploiement.
+  "keep_vars": true,
+
+  "r2_buckets": [
+    { "binding": "OUTILS", "bucket_name": "claude-prime-outils" }
+  ]
+}

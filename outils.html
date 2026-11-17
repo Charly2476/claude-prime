@@ -171,6 +171,105 @@
 
     h2 { scroll-margin-top: 16px; }
 
+    /* ---- Édition des fiches et commentaires ---- */
+    .etat {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      margin: 0 0 24px;
+      font-size: 0.92rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 16px;
+      align-items: center;
+    }
+
+    .etat a { color: var(--accent); font-weight: 600; }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 6px;
+      margin-top: 6px;
+    }
+
+    button {
+      font: inherit;
+      font-size: 0.8rem;
+      color: var(--fg);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 2px 8px;
+      cursor: pointer;
+    }
+
+    .actions button { white-space: nowrap; }
+    button:hover:not(:disabled) { border-color: var(--accent); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    button.principal { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+
+    .perso {
+      margin: 6px 0 0;
+      padding: 0;
+      list-style: none;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    details.commentaires { margin-top: 6px; font-size: 0.85rem; }
+    details.commentaires summary { cursor: pointer; color: var(--muted); }
+    details.commentaires ol, .liste-commentaires { margin: 6px 0 0; padding-left: 18px; }
+    .commentaire-texte { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .commentaire-meta { color: var(--muted); font-size: 0.8rem; }
+
+    dialog {
+      width: min(640px, calc(100vw - 32px));
+      max-height: calc(100vh - 32px);
+      background: var(--card);
+      color: var(--fg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+    }
+
+    dialog::backdrop { background: rgba(0, 0, 0, 0.45); }
+    dialog h3 { margin: 0 0 12px; }
+
+    .champ { display: grid; gap: 4px; margin: 0 0 12px; font-size: 0.9rem; }
+    .champ span { font-weight: 600; }
+
+    .champ input, .champ select, .champ textarea,
+    .perso-ligne input, .perso-ligne select, .perso-ligne textarea {
+      font: inherit;
+      font-size: 0.9rem;
+      color: var(--fg);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 8px;
+      width: 100%;
+    }
+
+    .perso-ligne {
+      display: grid;
+      grid-template-columns: 1fr 120px 1.4fr auto;
+      gap: 6px;
+      align-items: start;
+      margin: 0 0 8px;
+    }
+
+    .perso-ligne input[type="checkbox"] { width: auto; margin-top: 8px; }
+
+    @media (max-width: 640px) {
+      .perso-ligne { grid-template-columns: 1fr 1fr; }
+    }
+
+    .aide { color: var(--muted); font-size: 0.82rem; margin: 0 0 12px; }
+    .erreur-form { color: #c0392b; font-weight: 600; white-space: pre-wrap; }
+    .boutons { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
+    .boutons button { font-size: 0.9rem; padding: 6px 14px; }
+
     footer {
       margin-top: 40px;
       padding-top: 16px;
@@ -202,77 +301,79 @@
       </ol>
     </nav>
 
+    <div class="etat" id="etat-edition" role="status">Chargement des fiches…</div>
+
     <h2 id="code">Code &amp; édition</h2>
-    <div class="table-wrap">
+    <div class="table-wrap" data-section="code">
       <table>
         <thead>
           <tr><th>Outil</th><th>Format</th><th>Usage</th><th>Accès / périmètre</th><th>Vérifié le</th><th>Lien d'intérêt</th></tr>
         </thead>
         <tbody>
-          <tr>
+          <tr data-outil-id="o-5c158cf6">
             <td><a href="https://github.com/Aider-AI/aider">Aider</a></td><td>CLI</td>
             <td>Pair programming en terminal, modèles cloud ou locaux, intégration Git</td>
             <td>Client open source ; coûts d'API ou de modèle local</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-1670f60a">
             <td><a href="https://code.claude.com/docs/en/overview">Claude Code</a></td><td>CLI</td>
             <td>Agent de code avec workflows terminal et projet</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-c48fe476">
             <td><a href="https://github.com/cline/cline">Cline</a></td><td>—</td>
             <td>Agent pour IDE, terminal et desktop (fichiers, commandes, navigateur)</td>
             <td>Client + fournisseur de modèle ; voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-08f238ee">
             <td><a href="https://www.cursor.com/">Cursor</a></td><td>IDE</td>
             <td>Éditeur et agent : implémentation, débogage, revue</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-b0e93e35">
             <td><a href="https://github.com/google-gemini/gemini-cli">Gemini CLI</a></td><td>CLI</td>
             <td>Agent de code open source en terminal</td>
             <td>Clé API, Vertex ou entreprise éligible ; accès grand public retiré</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-2d6003f5">
             <td><a href="https://github.com/features/copilot">GitHub Copilot</a></td><td>—</td>
             <td>Assistance de code dans GitHub et les IDE pris en charge</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-4482898a">
             <td><a href="https://github.com/aaif-goose/goose">Goose</a></td><td>CLI</td>
             <td>Agent local extensible, interfaces desktop et CLI, outils MCP</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-b0383fc1">
             <td><a href="https://kiro.dev">Kiro</a></td><td>IDE</td>
             <td>Agent avec workflows IDE et CLI, spécifications et tests</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-1de428bf">
             <td><a href="https://openai.com/codex/">OpenAI Codex CLI</a></td><td>CLI</td>
             <td>Agent de code qui tourne en local dans le terminal</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-d2b430f6">
             <td><a href="https://github.com/earendil-works/pi">Pi</a></td><td>CLI</td>
             <td>Agent de code extensible et harnais intégrable</td>
             <td>Client MIT ; conditions du modèle séparées</td>
@@ -284,48 +385,48 @@
     </div>
 
     <h2 id="app">App &amp; UI : prototypage</h2>
-    <div class="table-wrap">
+    <div class="table-wrap" data-section="app">
       <table>
         <thead>
           <tr><th>Outil</th><th>Format</th><th>Usage</th><th>Accès / périmètre</th><th>Vérifié le</th><th>Lien d'intérêt</th></tr>
         </thead>
         <tbody>
-          <tr>
+          <tr data-outil-id="o-04e0d389">
             <td><a href="https://bolt.new/">Bolt.new</a></td><td>Web</td>
             <td>Création d'applications en langage naturel</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-7b0cc67c">
             <td><a href="https://github.com/dyad-sh/dyad">Dyad</a></td><td>Desktop</td>
             <td>Création d'applications en local avec fournisseurs de modèles configurables</td>
             <td>Voir les tarifs ; app locale, coûts du fournisseur de modèle</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-ecb62398">
             <td><a href="https://lovable.dev/">Lovable</a></td><td>Web</td>
             <td>Génération d'applications full-stack avec Supabase</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-4d299af3">
             <td><a href="https://www.onlook.com/">Onlook</a></td><td>Web</td>
             <td>Édition visuelle de l'interface en travaillant le code</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-8f695f6b">
             <td><a href="https://replit.com/">Replit</a></td><td>Web</td>
             <td>Création et itération d'applications avec Replit Agent</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-b6580fb3">
             <td><a href="https://v0.app/">v0</a></td><td>Web</td>
             <td>Génération d'interfaces UI/React par Vercel</td>
             <td>Voir les tarifs</td>
@@ -337,62 +438,62 @@
     </div>
 
     <h2 id="contexte">Contexte, specs &amp; intégrations</h2>
-    <div class="table-wrap">
+    <div class="table-wrap" data-section="contexte">
       <table>
         <thead>
           <tr><th>Outil</th><th>Format</th><th>Usage</th><th>Accès / périmètre</th><th>Vérifié le</th><th>Lien d'intérêt</th></tr>
         </thead>
         <tbody>
-          <tr>
+          <tr data-outil-id="o-2d877065">
             <td><a href="https://github.com/caliber-ai-org/ai-setup">Caliber</a></td><td>CLI</td>
             <td>Génère et synchronise les configs d'agents IA</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-ceb5e408">
             <td><a href="https://github.com/upstash/context7">Context7</a></td><td>MCP</td>
             <td>Documentation des bibliothèques pour le contexte de code</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-13b15172">
             <td><a href="https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem">Filesystem MCP</a></td><td>MCP</td>
             <td>Accès contrôlé aux fichiers du projet</td>
             <td>Voir les tarifs ; implémentation de référence, pas une garantie de production</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-26eb04e3">
             <td><a href="https://github.com/github/github-mcp-server">GitHub MCP</a></td><td>MCP</td>
             <td>Dépôts, issues et pull requests</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-c0506520">
             <td><a href="https://github.com/neondatabase/mcp-server-neon">Neon</a></td><td>MCP</td>
             <td>Workflows de développement avec bases Neon</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-289ab069">
             <td><a href="https://developers.notion.com/guides/mcp/overview">Notion MCP</a></td><td>MCP</td>
             <td>MCP hébergé officiel pour lire et mettre à jour Notion</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-8774e718">
             <td><a href="https://github.com/Fission-AI/OpenSpec">OpenSpec</a></td><td>—</td>
             <td>Développement piloté par les spécifications</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-0654549d">
             <td><a href="https://github.com/supabase/mcp">Supabase MCP</a></td><td>MCP</td>
             <td>Schémas, requêtes et configuration de projet Supabase</td>
             <td>Voir les tarifs</td>
@@ -404,55 +505,55 @@
     </div>
 
     <h2 id="tests">Tests, revue &amp; sécurité</h2>
-    <div class="table-wrap">
+    <div class="table-wrap" data-section="tests">
       <table>
         <thead>
           <tr><th>Outil</th><th>Format</th><th>Usage</th><th>Accès / périmètre</th><th>Vérifié le</th><th>Lien d'intérêt</th></tr>
         </thead>
         <tbody>
-          <tr>
+          <tr data-outil-id="o-72192f18">
             <td><a href="https://github.com/vostride/agent-qa">Agent QA</a></td><td>MCP</td>
             <td>Tests web et mobiles en langage naturel</td>
             <td>FSL-1.1-ALv2 : source disponible avec restriction de concurrence ; coûts de modèle</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-2eda794e">
             <td><a href="https://github.com/microsoft/playwright-mcp">Playwright MCP</a> (Microsoft)</td><td>MCP</td>
             <td>Automatisation de navigateur par snapshots structurés</td>
             <td>Client Apache-2.0 ; conditions du modèle séparées</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-d4242c53">
             <td><a href="https://github.com/The-PR-Agent/pr-agent">PR-Agent</a></td><td>—</td>
             <td>Relecteur de pull requests maintenu par la communauté</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-393e4b53">
             <td><a href="https://getprbl.com">Prbl</a></td><td>Web</td>
             <td>Scan des failles fréquentes du code généré par IA ; GitHub Action</td>
             <td>Scan et Action gratuits ; plans payants pour la réécriture et les dépôts privés ; Python, JS et TS uniquement</td>
             <td>2026-09-23</td>
             <td>Vend des plans payants</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-0587b6b3">
             <td><a href="https://www.qodo.ai">Qodo</a></td><td>—</td>
             <td>Moteur de revue de code IA (ex-CodiumAI)</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-f552ea5a">
             <td><a href="https://github.com/semgrep/semgrep">Semgrep MCP</a></td><td>MCP</td>
             <td>Analyse de sécurité via le CLI Semgrep</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-4296aaa6">
             <td><a href="https://github.com/getsentry/sentry-mcp">Sentry</a></td><td>MCP</td>
             <td>Inspection des erreurs applicatives</td>
             <td>Functional Source License ; source disponible ; vérifier les conditions hébergées</td>
@@ -464,34 +565,34 @@
     </div>
 
     <h2 id="deploiement">Déploiement &amp; exécution</h2>
-    <div class="table-wrap">
+    <div class="table-wrap" data-section="deploiement">
       <table>
         <thead>
           <tr><th>Outil</th><th>Format</th><th>Usage</th><th>Accès / périmètre</th><th>Vérifié le</th><th>Lien d'intérêt</th></tr>
         </thead>
         <tbody>
-          <tr>
+          <tr data-outil-id="o-fad60076">
             <td><a href="https://github.com/cloudflare/mcp-server-cloudflare">Cloudflare</a></td><td>MCP</td>
             <td>Gestion du déploiement et des ressources cloud</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-58547638">
             <td><a href="https://github.com/e2b-dev/E2B">E2B</a></td><td>—</td>
             <td>Bac à sable cloud sécurisé pour agents</td>
             <td>Voir les tarifs</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-81327152">
             <td><a href="https://publish.my/">Publish.my</a></td><td>Web</td>
             <td>Publication de sites statiques par un agent</td>
             <td>Offre gratuite ; sites statiques seulement ; activation par e-mail</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-bae105c7">
             <td><a href="https://github.com/getsentry/XcodeBuildMCP">XcodeBuildMCP</a></td><td>MCP</td>
             <td>Build, exécution et débogage de projets Apple</td>
             <td>Voir les tarifs</td>
@@ -503,62 +604,62 @@
     </div>
 
     <h2 id="espaces">Espaces de travail &amp; suivi d'usage</h2>
-    <div class="table-wrap">
+    <div class="table-wrap" data-section="espaces">
       <table>
         <thead>
           <tr><th>Outil</th><th>Format</th><th>Usage</th><th>Accès / périmètre</th><th>Vérifié le</th><th>Lien d'intérêt</th></tr>
         </thead>
         <tbody>
-          <tr>
+          <tr data-outil-id="o-322db226">
             <td><a href="https://delta.dev/">Delta (Zed)</a></td><td>Desktop</td>
             <td>Threads d'agents et revue de code dans un espace multijoueur</td>
             <td>Gratuit pendant la bêta publique ; plans payants prévus ; coûts du modèle séparés</td>
             <td>2026-09-20</td>
             <td>Plans payants annoncés comme prévus</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-5f6e51bf">
             <td><a href="https://github.com/MusicMaster4/Duckweed">Duckweed</a></td><td>Desktop</td>
             <td>Agents, shells, diffs Git et sessions en local</td>
             <td>Source disponible ; voir la licence ; coûts du modèle séparés</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-baa74a41">
             <td><a href="https://github.com/lanesket/llm.log">llm.log</a></td><td>—</td>
             <td>Coûts, tokens et traces des requêtes via un proxy local</td>
             <td>MIT ; coûts du modèle séparés</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-f68f9660">
             <td><a href="https://github.com/johannesjo/parallel-code">Parallel Code</a></td><td>Desktop</td>
             <td>Agents dans des worktrees Git isolés</td>
             <td>MIT ; coûts du modèle séparés</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-a0a4a2ac">
             <td><a href="https://github.com/shep-ai/shep">Shep</a></td><td>CLI</td>
             <td>Agents en parallèle jusqu'aux pull requests brouillon</td>
             <td>Client MIT ; abonnement ou coûts d'API de l'agent séparés</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-02b0e06e">
             <td><a href="https://github.com/pungme/superagent-desktop">Superagent</a></td><td>Desktop</td>
             <td>Claude Code ou Codex dans un espace macOS, avec outils navigateur et iOS</td>
             <td>MIT ; macOS Apple Silicon ; abonnement au modèle séparé</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-9f8904b0">
             <td><a href="https://github.com/aqua5230/usage">usage</a></td><td>Desktop</td>
             <td>Quotas des agents dans la barre de menus macOS ou la zone de notification Windows</td>
             <td>AGPL-3.0 ; coûts du fournisseur séparés</td>
             <td>2026-09-18</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-6e812143">
             <td><a href="https://www.warp.dev/terminal">Warp Terminal</a></td><td>—</td>
             <td>Terminal orienté agents, pour inspecter les workflows</td>
             <td>Téléchargement du terminal ; vérifier les tarifs de l'IA</td>
@@ -571,188 +672,188 @@
 
     <h2 id="inspiration">Inspiration &amp; composants UI (post de référence)</h2>
     <p class="muted">Liste des 25 ressources issues des captures du post, lues en pleine résolution. Ni prix, ni date, ni conditions d'accès ne figurent dans la source.</p>
-    <div class="table-wrap">
+    <div class="table-wrap" data-section="inspiration">
       <table>
         <thead>
           <tr><th>Outil</th><th>Usage</th><th>Accès / périmètre</th><th>Vérifié le</th><th>Lien d'intérêt</th></tr>
         </thead>
         <tbody>
-          <tr>
+          <tr data-outil-id="o-cb7f8378">
             <td><a href="https://scrolltide.co">scrolltide.co</a></td>
             <td>600+ prompts primés et code source complet pour sites 3D et pilotés par le défilement ; 100+ scènes 3D, 200+ dégradés interactifs, 200+ composants UI. Copier le prompt, le coller dans Claude, Cursor ou Lovable.</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Non indiqué</td>
             <td>Recommandée par l'auteur du post, qui écrit « si vous n'en ouvrez qu'un, prenez le n° 1 » : auto-promotion</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-bceddbf7">
             <td><a href="https://minimal.gallery">Minimal Gallery</a></td>
             <td>Sites haut de gamme sélectionnés pour nourrir un agent</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-39c1da2c">
             <td><a href="https://godly.website">Godly</a></td>
             <td>Sites sélectionnés à la main, avec un souci de l'artisanat</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-1eb1416d">
             <td><a href="https://styles.refero.design">Refero Styles</a></td>
             <td>Plus de 2 000 styles de produits réels, avec typographie</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-498ebad6">
             <td><a href="https://component.gallery">Component Gallery</a></td>
             <td>Plus de 2 600 exemples de la façon dont les design systems résolvent le même élément</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-b8f7ad28">
             <td><a href="https://mobbin.com">Mobbin</a></td>
             <td>Parcours d'applications issus de produits réels</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-41729b31">
             <td><a href="https://designmd.ai">DESIGNmd</a></td>
             <td>Design systems en Markdown, lisibles par votre agent</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-11abc7ae">
             <td><a href="https://vibeprompts.dev">VibePrompt</a></td>
             <td>Prompts prêts à l'emploi pour tableaux de bord et pages d'accueil</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-359c1733">
             <td><a href="https://21st.dev">21st.dev</a></td>
             <td>Registre de composants qui se branche aux agents via MCP</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-4eb6a5d6">
             <td><a href="https://kinetics.colorion.co">Kinetics</a></td>
             <td>Plus de 150 effets de mouvement avec code React et prompts</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-cceb8660">
             <td><a href="https://ui.shadcn.com">shadcn/ui</a></td>
             <td>Toujours la référence pour des composants propres et réutilisables</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-340642be">
             <td><a href="https://ui.aceternity.com">Aceternity UI</a></td>
             <td>Plus de 200 composants React/Tailwind animés</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-78c212b5">
             <td><a href="https://magicui.design">Magic UI</a></td>
             <td>Composants soignés pour applications web modernes</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-2ccf9880">
             <td><a href="https://motion-primitives.com">Motion Primitives</a></td>
             <td>Composants d'animation et d'interaction prêts à l'emploi</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-8961f263">
             <td><a href="https://uiverse.io">Uiverse</a></td>
             <td>Éléments d'interface et composants interactifs créés par la communauté</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-8202bba1">
             <td><a href="https://shadcnblocks.com">Shadcnblocks</a></td>
             <td>Blocs complets, pas seulement des boutons</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-139867a5">
             <td><a href="https://mapcn.dev">mapcn</a></td>
             <td>Composants de carte : marqueurs, itinéraires, popups</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-a07cd7c3">
             <td><a href="https://awwwards.com">Awwwards</a></td>
             <td>Les sites qui ont réellement gagné</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-5087e440">
             <td><a href="https://glass.samasante.com">Liquid Glass</a></td>
             <td>Composants et effets de réfraction « verre liquide »</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-a688fc78">
             <td><a href="https://text-effects.colorion.co">CSS Text Effects</a></td>
             <td>Animations et effets créatifs sur le texte en CSS</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-6616bcdd">
             <td><a href="https://circleloaders.dominikakissi.com">Circle Loaders</a></td>
             <td>Animations et loaders de chargement créatifs</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-61f86e0c">
             <td><a href="https://gradientbuttons.colorion.co">Gradient Buttons</a></td>
             <td>Styles et effets de boutons en dégradé</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-b06974a8">
             <td><a href="https://shadertoy.com">Shadertoy</a></td>
             <td>Shaders à étudier et remixer</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-11bd261f">
             <td><a href="https://3dicons.co">3Dicons</a></td>
             <td>Bibliothèque d'icônes 3D gratuites pour interfaces modernes</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-10d56af7">
             <td><a href="https://animejs.com">Anime.js</a></td>
             <td>Bibliothèque JavaScript légère pour l'animation web</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Non indiqué</td>
             <td class="muted">Aucun indiqué</td>
           </tr>
-          <tr>
+          <tr data-outil-id="o-c93d6e66">
             <td><a href="https://podie.dev">PODIE</a></td>
             <td>Stack de composants de défilement et d'animation (cité par un autre compte dans une réponse, hors liste des 25)</td>
             <td class="muted">Non indiqué</td>
@@ -769,5 +870,519 @@
 
     <footer>Page des outils &middot; outils.html &middot; d'après le README awesome-vibecoding et les captures du post</footer>
   </main>
+
+  <dialog id="dlg-fiche" aria-labelledby="dlg-fiche-titre">
+    <form id="form-fiche" method="dialog" novalidate>
+      <h3 id="dlg-fiche-titre">Modifier la fiche</h3>
+      <label class="champ"><span>Section</span><select name="section"></select></label>
+      <label class="champ"><span>Nom</span><input name="nom" required maxlength="120"></label>
+      <label class="champ"><span>Mention après le nom</span><input name="mention" maxlength="120" placeholder="ex. (Microsoft)"></label>
+      <label class="champ"><span>Adresse (http ou https)</span><input name="url" type="url" required maxlength="2048"></label>
+      <label class="champ"><span>Format</span><input name="format" maxlength="40" placeholder="CLI, IDE, Web, Desktop, MCP… (vide = —)"></label>
+      <p class="aide" id="aide-format" hidden>La section Inspiration n'affiche pas la colonne Format : la valeur est gardée mais pas montrée.</p>
+      <label class="champ"><span>Usage</span><textarea name="usage" rows="2" maxlength="1000"></textarea></label>
+      <label class="champ"><span>Accès / périmètre</span><textarea name="acces" rows="2" maxlength="1000" placeholder="vide = Non indiqué"></textarea></label>
+      <label class="champ"><span>Vérifié le</span><input name="verifieLe" type="date"></label>
+      <p class="aide">Date vide = « Non indiqué ».</p>
+      <label class="champ"><span>Lien d'intérêt</span><textarea name="lienInteret" rows="2" maxlength="500" placeholder="vide = Aucun indiqué"></textarea></label>
+      <fieldset style="border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin:0 0 12px;">
+        <legend>Champs personnalisés</legend>
+        <div id="perso-liste"></div>
+        <button type="button" id="perso-ajouter">Ajouter un champ</button>
+      </fieldset>
+      <p class="erreur-form" id="fiche-erreur" role="alert"></p>
+      <div class="boutons">
+        <button type="button" data-fermer>Annuler</button>
+        <button type="submit" class="principal">Enregistrer</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dlg-commentaire" aria-labelledby="dlg-commentaire-titre">
+    <form id="form-commentaire" method="dialog" novalidate>
+      <h3 id="dlg-commentaire-titre">Ajouter un commentaire</h3>
+      <ol class="liste-commentaires" id="commentaires-existants"></ol>
+      <label class="champ"><span>Votre commentaire</span><textarea name="texte" rows="4" required maxlength="2000"></textarea></label>
+      <p class="aide">Le commentaire est signé avec l'adresse de votre connexion.</p>
+      <p class="erreur-form" id="commentaire-erreur" role="alert"></p>
+      <div class="boutons">
+        <button type="button" data-fermer>Annuler</button>
+        <button type="submit" class="principal">Publier</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script>
+  // Fiches et commentaires des outils, enregistrés dans R2 via le Worker claude-prime-api.
+  // La liste HTML ci-dessus sert de base : sans API (ex. GitHub Pages), elle s'affiche telle quelle.
+  // Tout texte venant des données est affiché avec textContent, jamais comme HTML.
+  (() => {
+    'use strict';
+
+    const API = '/api';
+    const SECTIONS = {
+      code: 'Code & édition',
+      app: 'App & UI : prototypage',
+      contexte: 'Contexte, specs & intégrations',
+      tests: 'Tests, revue & sécurité',
+      deploiement: 'Déploiement & exécution',
+      espaces: "Espaces de travail & suivi d'usage",
+      inspiration: 'Inspiration & composants UI',
+    };
+    const TYPES = { texte: 'Texte', booleen: 'Oui / non', date: 'Date', liste: 'Liste', url: 'Adresse web' };
+    const MAX_PERSO = 20;
+
+    const etat = { apiOk: false, editionActive: false, utilisateur: null, fiches: {}, commentaires: {} };
+    const lignes = new Map();   // outilId -> <tr>
+    const graines = new Map();  // outilId -> fiche lue dans la liste HTML d'origine
+
+    // ---------- Outils ----------
+
+    const el = (balise, texte, classe) => {
+      const n = document.createElement(balise);
+      if (texte !== undefined && texte !== null) n.textContent = texte;
+      if (classe) n.className = classe;
+      return n;
+    };
+
+    const urlSure = (v) => {
+      if (typeof v !== 'string') return false;
+      try { const u = new URL(v); return (u.protocol === 'http:' || u.protocol === 'https:') && !!u.hostname; }
+      catch { return false; }
+    };
+
+    const dateFr = (iso) => {
+      const d = new Date(iso);
+      return Number.isNaN(d.getTime()) ? '' : d.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' });
+    };
+
+    // ---------- Lecture de la liste HTML d'origine ----------
+
+    function lireLigne(tr) {
+      const section = tr.closest('.table-wrap').dataset.section;
+      const c = tr.cells;
+      const lien = c[0].querySelector('a');
+      const t = (td) => td.textContent.trim();
+      const ouNull = (td, absent) => (t(td) === absent ? null : t(td));
+      let i = 1;
+      const format = section === 'inspiration' ? null : t(c[i++]);
+      const usage = t(c[i++]);
+      const acces = ouNull(c[i++], 'Non indiqué');
+      const verifie = t(c[i++]);
+      const lienInteret = ouNull(c[i++], 'Aucun indiqué');
+      return {
+        outilId: tr.dataset.outilId,
+        champs: {
+          section,
+          nom: lien.textContent.trim(),
+          mention: t(c[0]).replace(lien.textContent, '').trim(),
+          url: lien.getAttribute('href'),
+          format: format && format !== '—' ? format : null,
+          usage,
+          acces,
+          verifieLe: /^\d{4}-\d{2}-\d{2}$/.test(verifie) ? verifie : null,
+          lienInteret,
+        },
+        perso: [],
+      };
+    }
+
+    // ---------- Affichage ----------
+
+    function raisonBlocage(id) {
+      if (!etat.apiOk) return 'Données en ligne indisponibles sur ce site.';
+      if (!etat.editionActive) return 'Modification désactivée : protection non configurée côté serveur.';
+      if (!etat.utilisateur) return 'Connectez-vous pour modifier.';
+      if (!etat.fiches[id]) return "Fiche non initialisée dans R2 : utilisez « Initialiser » en haut de la page.";
+      return null;
+    }
+
+    function valeurPerso(p) {
+      if (p.type === 'booleen') return p.valeur ? 'Oui' : 'Non';
+      if (p.type === 'liste') return p.valeur.length ? p.valeur.join(', ') : '(vide)';
+      if (p.type === 'date') return p.valeur || 'Non indiqué';
+      return p.valeur;
+    }
+
+    function cellule(tr, valeur, absent) {
+      const td = tr.insertCell();
+      if (valeur === null || valeur === undefined || valeur === '') {
+        td.textContent = absent ?? '';
+        if (absent) td.className = 'muted';
+      } else {
+        td.textContent = valeur;
+      }
+      return td;
+    }
+
+    function afficherLigne(id) {
+      const tr = lignes.get(id);
+      const fiche = etat.fiches[id] || graines.get(id);
+      const ch = fiche.champs;
+      const corps = document.querySelector(`.table-wrap[data-section="${ch.section}"] tbody`);
+      if (corps && tr.parentElement !== corps) corps.appendChild(tr);
+
+      tr.replaceChildren();
+      const tdOutil = tr.insertCell();
+      if (urlSure(ch.url)) {
+        const a = el('a', ch.nom);
+        a.href = ch.url;
+        tdOutil.append(a);
+      } else {
+        tdOutil.append(el('span', ch.nom));
+      }
+      if (ch.mention) tdOutil.append(' ' + ch.mention);
+
+      const raison = raisonBlocage(id);
+      const actions = el('div', null, 'actions');
+      for (const [libelle, ouvrir] of [['Modifier la fiche', ouvrirFiche], ['Ajouter un commentaire', ouvrirCommentaire]]) {
+        const b = el('button', libelle);
+        b.type = 'button';
+        b.disabled = !!raison;
+        if (raison) b.title = raison;
+        b.addEventListener('click', () => ouvrir(id));
+        actions.append(b);
+      }
+      tdOutil.append(actions);
+
+      const coms = etat.commentaires[id] || [];
+      if (coms.length) {
+        const d = el('details', null, 'commentaires');
+        d.append(el('summary', coms.length === 1 ? '1 commentaire' : `${coms.length} commentaires`));
+        d.append(listeCommentaires(coms));
+        tdOutil.append(d);
+      }
+
+      if (ch.section !== 'inspiration') cellule(tr, ch.format, '—').classList.remove('muted');
+      const tdUsage = cellule(tr, ch.usage);
+      if (fiche.perso.length) {
+        const ul = el('ul', null, 'perso');
+        for (const p of fiche.perso) {
+          const li = el('li');
+          li.append(el('strong', p.cle + ' : '));
+          if (p.type === 'url' && urlSure(p.valeur)) {
+            const a = el('a', p.valeur);
+            a.href = p.valeur;
+            li.append(a);
+          } else {
+            li.append(valeurPerso(p));
+          }
+          ul.append(li);
+        }
+        tdUsage.append(ul);
+      }
+      cellule(tr, ch.acces, 'Non indiqué');
+      cellule(tr, ch.verifieLe, 'Non indiqué');
+      cellule(tr, ch.lienInteret, 'Aucun indiqué');
+    }
+
+    function listeCommentaires(coms) {
+      const ol = el('ol');
+      for (const c of coms) {
+        const li = el('li');
+        li.append(el('p', c.texte, 'commentaire-texte'));
+        li.append(el('span', `${c.auteur} · ${dateFr(c.creeLe)}`, 'commentaire-meta'));
+        ol.append(li);
+      }
+      return ol;
+    }
+
+    function afficherEtat(message) {
+      const zone = document.getElementById('etat-edition');
+      zone.replaceChildren();
+      if (message) zone.append(el('span', message));
+      if (!etat.apiOk) {
+        zone.append(el('span', "Lecture seule : les fiches en ligne ne sont pas disponibles ici. La liste ci-dessous est celle d'origine."));
+        return;
+      }
+      if (!etat.editionActive) {
+        zone.append(el('span', 'Lecture seule : modification désactivée tant que la protection Cloudflare Access n’est pas configurée.'));
+        return;
+      }
+      if (!etat.utilisateur) {
+        zone.append(el('span', 'Lecture seule.'));
+        const a = el('a', 'Se connecter pour modifier');
+        a.href = `${API}/edit/connexion?retour=${encodeURIComponent(location.pathname)}`;
+        zone.append(a);
+        return;
+      }
+      zone.append(el('span', `Connecté : ${etat.utilisateur}`));
+      const manquantes = [...lignes.keys()].filter((id) => !etat.fiches[id]);
+      if (manquantes.length) {
+        const b = el('button', `Initialiser ${manquantes.length} fiche(s) manquante(s) depuis la liste`);
+        b.type = 'button';
+        b.addEventListener('click', () => initialiser(manquantes));
+        zone.append(b);
+      }
+    }
+
+    function toutAfficher(message) {
+      for (const id of lignes.keys()) afficherLigne(id);
+      afficherEtat(message);
+    }
+
+    // ---------- Échanges avec l'API ----------
+
+    async function envoyer(methode, chemin, corps) {
+      try {
+        const r = await fetch(API + chemin, {
+          method: methode,
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(corps),
+          credentials: 'same-origin',
+          redirect: 'manual',
+        });
+        let d = {};
+        try { d = await r.json(); } catch { /* réponse sans JSON */ }
+        // Redirection vers la page de connexion Access = session expirée.
+        return { statut: r.type === 'opaqueredirect' ? 401 : r.status, d };
+      } catch {
+        return { statut: 0, d: { erreur: 'Réseau indisponible.' } };
+      }
+    }
+
+    function messageErreur(statut, d) {
+      if (statut === 401) {
+        etat.utilisateur = null;
+        afficherEtat();
+        return 'Connexion requise ou expirée : reconnectez-vous (lien en haut de la page).';
+      }
+      return (d && typeof d.erreur === 'string' && d.erreur) || `Erreur ${statut}.`;
+    }
+
+    async function charger(message) {
+      try {
+        const r = await fetch(`${API}/outils`, { headers: { accept: 'application/json' }, cache: 'no-store' });
+        const d = r.ok ? await r.json() : null;
+        if (!d || typeof d.fiches !== 'object' || typeof d.commentaires !== 'object') throw new Error();
+        etat.apiOk = true;
+        etat.editionActive = d.editionActive === true;
+        etat.fiches = d.fiches;
+        etat.commentaires = d.commentaires;
+      } catch {
+        etat.apiOk = false;
+      }
+      etat.utilisateur = null;
+      if (etat.apiOk && etat.editionActive) {
+        try {
+          const r = await fetch(`${API}/edit/session`, { credentials: 'same-origin', redirect: 'manual' });
+          if (r.ok) etat.utilisateur = (await r.json()).email || null;
+        } catch { /* pas connecté */ }
+      }
+      toutAfficher(message);
+    }
+
+    async function initialiser(ids) {
+      if (!confirm(`Créer ${ids.length} fiche(s) dans R2 à partir de la liste actuelle ?\nLes fiches qui existent déjà ne seront jamais modifiées.`)) return;
+      const { statut, d } = await envoyer('POST', '/edit/init', { fiches: ids.map((id) => graines.get(id)) });
+      if (statut !== 200) return afficherEtat(messageErreur(statut, d));
+      await charger(`Initialisation : ${d.creees.length} créée(s), ${d.existantes.length} déjà présente(s) (non modifiées).`);
+    }
+
+    // ---------- Formulaire « Modifier la fiche » ----------
+
+    const dlgFiche = document.getElementById('dlg-fiche');
+    const formFiche = document.getElementById('form-fiche');
+    const listePerso = document.getElementById('perso-liste');
+    let ficheOuverte = null;
+
+    for (const [cle, libelle] of Object.entries(SECTIONS)) {
+      const o = el('option', libelle);
+      o.value = cle;
+      formFiche.elements.section.append(o);
+    }
+    formFiche.elements.section.addEventListener('change', () => {
+      document.getElementById('aide-format').hidden = formFiche.elements.section.value !== 'inspiration';
+    });
+
+    function widgetValeur(type, valeur) {
+      let w;
+      if (type === 'booleen') {
+        w = el('input');
+        w.type = 'checkbox';
+        w.checked = valeur === true;
+      } else if (type === 'liste') {
+        w = el('textarea');
+        w.rows = 2;
+        w.placeholder = 'une valeur par ligne';
+        w.value = Array.isArray(valeur) ? valeur.join('\n') : '';
+      } else {
+        w = el('input');
+        w.type = type === 'date' ? 'date' : type === 'url' ? 'url' : 'text';
+        w.value = typeof valeur === 'string' ? valeur : '';
+      }
+      w.dataset.role = 'valeur';
+      w.setAttribute('aria-label', 'Valeur');
+      return w;
+    }
+
+    function lignePerso(p = { cle: '', type: 'texte', valeur: '' }) {
+      const ligne = el('div', null, 'perso-ligne');
+      const cle = el('input');
+      cle.value = p.cle;
+      cle.placeholder = 'Nom du champ';
+      cle.maxLength = 60;
+      cle.dataset.role = 'cle';
+      cle.setAttribute('aria-label', 'Nom du champ');
+      const type = el('select');
+      type.dataset.role = 'type';
+      type.setAttribute('aria-label', 'Type');
+      for (const [v, l] of Object.entries(TYPES)) {
+        const o = el('option', l);
+        o.value = v;
+        type.append(o);
+      }
+      type.value = p.type;
+      let valeur = widgetValeur(p.type, p.valeur);
+      type.addEventListener('change', () => {
+        const nouveau = widgetValeur(type.value, null);
+        valeur.replaceWith(nouveau);
+        valeur = nouveau;
+      });
+      const retirer = el('button', 'Retirer');
+      retirer.type = 'button';
+      retirer.addEventListener('click', () => ligne.remove());
+      ligne.append(cle, type, valeur, retirer);
+      return ligne;
+    }
+
+    document.getElementById('perso-ajouter').addEventListener('click', () => {
+      if (listePerso.children.length >= MAX_PERSO) return;
+      listePerso.append(lignePerso());
+    });
+
+    function remplirFiche(fiche) {
+      const ch = fiche.champs;
+      const f = formFiche.elements;
+      f.section.value = ch.section;
+      f.nom.value = ch.nom;
+      f.mention.value = ch.mention || '';
+      f.url.value = ch.url;
+      f.format.value = ch.format || '';
+      f.usage.value = ch.usage;
+      f.acces.value = ch.acces || '';
+      f.verifieLe.value = ch.verifieLe || '';
+      f.lienInteret.value = ch.lienInteret || '';
+      document.getElementById('aide-format').hidden = ch.section !== 'inspiration';
+      listePerso.replaceChildren(...fiche.perso.map((p) => lignePerso(p)));
+    }
+
+    function ouvrirFiche(id) {
+      const fiche = etat.fiches[id];
+      if (!fiche) return;
+      ficheOuverte = { id, version: fiche.version };
+      document.getElementById('dlg-fiche-titre').textContent = `Modifier la fiche : ${fiche.champs.nom}`;
+      document.getElementById('fiche-erreur').textContent = '';
+      remplirFiche(fiche);
+      dlgFiche.showModal();
+    }
+
+    function lireFormulaire() {
+      const f = formFiche.elements;
+      const ouNull = (v) => (v.trim() === '' ? null : v.trim());
+      const erreurs = [];
+      const champs = {
+        section: f.section.value,
+        nom: f.nom.value.trim(),
+        mention: f.mention.value.trim(),
+        url: f.url.value.trim(),
+        format: ouNull(f.format.value),
+        usage: f.usage.value.trim(),
+        acces: ouNull(f.acces.value),
+        verifieLe: ouNull(f.verifieLe.value),
+        lienInteret: ouNull(f.lienInteret.value),
+      };
+      if (!champs.nom) erreurs.push('Le nom est obligatoire.');
+      if (!urlSure(champs.url)) erreurs.push('Adresse : une URL http ou https valide est attendue.');
+      if (champs.verifieLe && !/^\d{4}-\d{2}-\d{2}$/.test(champs.verifieLe)) erreurs.push('Vérifié le : date invalide.');
+      const vues = new Set();
+      const perso = [...listePerso.children].map((ligne) => {
+        const cle = ligne.querySelector('[data-role="cle"]').value.trim();
+        const type = ligne.querySelector('[data-role="type"]').value;
+        const w = ligne.querySelector('[data-role="valeur"]');
+        let valeur;
+        if (type === 'booleen') valeur = w.checked;
+        else if (type === 'liste') valeur = w.value.split('\n').map((v) => v.trim()).filter(Boolean);
+        else if (type === 'date') valeur = w.value || null;
+        else valeur = w.value.trim();
+        if (!cle) erreurs.push('Champ personnalisé : le nom est obligatoire.');
+        else if (vues.has(cle.toLowerCase())) erreurs.push(`Champ personnalisé « ${cle} » en double.`);
+        vues.add(cle.toLowerCase());
+        if (type === 'url' && !urlSure(valeur)) erreurs.push(`Champ « ${cle} » : URL http ou https attendue.`);
+        return { cle, type, valeur };
+      });
+      return { champs, perso, erreurs };
+    }
+
+    formFiche.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const zoneErreur = document.getElementById('fiche-erreur');
+      const { champs, perso, erreurs } = lireFormulaire();
+      if (erreurs.length) { zoneErreur.textContent = erreurs.join('\n'); return; }
+      const { id, version } = ficheOuverte;
+      zoneErreur.textContent = 'Enregistrement…';
+      const { statut, d } = await envoyer('PUT', `/edit/outils/${encodeURIComponent(id)}`, { version, champs, perso });
+      if (statut === 200) {
+        etat.fiches[id] = d.fiche;
+        afficherLigne(id);
+        dlgFiche.close();
+        return;
+      }
+      if (statut === 409) {
+        if (d.fiche) { etat.fiches[id] = d.fiche; afficherLigne(id); }
+        const qui = d.fiche ? ` (par ${d.fiche.majPar}, ${dateFr(d.fiche.majLe)})` : '';
+        zoneErreur.textContent = `Conflit : cette fiche a été modifiée entre-temps${qui}. Vos changements ne sont PAS enregistrés et rien n'a été écrasé. Copiez vos textes si besoin, fermez puis rouvrez la fiche pour repartir de la version actuelle.`;
+        return;
+      }
+      zoneErreur.textContent = messageErreur(statut, d);
+    });
+
+    // ---------- Formulaire « Ajouter un commentaire » ----------
+
+    const dlgCom = document.getElementById('dlg-commentaire');
+    const formCom = document.getElementById('form-commentaire');
+    let comOuvert = null;
+
+    function ouvrirCommentaire(id) {
+      const fiche = etat.fiches[id];
+      if (!fiche) return;
+      comOuvert = id;
+      document.getElementById('dlg-commentaire-titre').textContent = `Ajouter un commentaire : ${fiche.champs.nom}`;
+      document.getElementById('commentaires-existants').replaceChildren(...listeCommentaires(etat.commentaires[id] || []).children);
+      document.getElementById('commentaire-erreur').textContent = '';
+      formCom.elements.texte.value = '';
+      dlgCom.showModal();
+    }
+
+    formCom.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const zoneErreur = document.getElementById('commentaire-erreur');
+      const texte = formCom.elements.texte.value.trim();
+      if (!texte) { zoneErreur.textContent = 'Le commentaire est vide.'; return; }
+      zoneErreur.textContent = 'Publication…';
+      const id = comOuvert;
+      const { statut, d } = await envoyer('POST', `/edit/outils/${encodeURIComponent(id)}/commentaires`, { texte });
+      if (statut === 201) {
+        (etat.commentaires[id] ||= []).push(d.commentaire);
+        afficherLigne(id);
+        dlgCom.close();
+        return;
+      }
+      zoneErreur.textContent = messageErreur(statut, d);
+    });
+
+    for (const b of document.querySelectorAll('dialog [data-fermer]')) {
+      b.addEventListener('click', () => b.closest('dialog').close());
+    }
+
+    // ---------- Démarrage ----------
+
+    for (const tr of document.querySelectorAll('tr[data-outil-id]')) {
+      lignes.set(tr.dataset.outilId, tr);
+      graines.set(tr.dataset.outilId, lireLigne(tr));
+    }
+    charger();
+  })();
+  </script>
 </body>
 </html>
