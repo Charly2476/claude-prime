@@ -1,16 +1,29 @@
-// claude-prime-api : enregistre les fiches et les commentaires de outils.html dans R2.
+// claude-prime-api : enregistre les fiches (R2) et les commentaires (D1) de outils.html.
 //
 // Stockage R2 (liaison DATA) :
 //   outils/<outilId>.json               une fiche par outil (avec "version"), ex. outils/outil-001.json
-//   commentaires/<outilId>/<uuid>.json  un objet par commentaire
+//   commentaires/<outilId>/<uuid>.json  ANCIENS commentaires : plus aucune écriture ici, seulement
+//                                       relus (et repris dans D1 sur demande). Jamais supprimés.
+//
+// Stockage D1 (liaison DB, table commentaires, voir migrations/0001_commentaires.sql) :
+//   tous les nouveaux commentaires. Toutes les requêtes passent par prepare().bind() :
+//   aucune valeur n'est jamais collée dans le texte SQL.
 //
 // Routes (la page les appelle sur son propre domaine, via functions/api/[[path]].js) :
 //   GET  /api/outils                          lecture publique des fiches et commentaires
+//   GET  /api/outils/:id/commentaires         les 20 derniers commentaires d'un outil (public),
+//                                             puis ?avant=<curseur> pour les 20 précédents
 //   GET  /api/edit/session                    qui est connecté (protégé)
 //   GET  /api/edit/connexion?retour=/...      passe par Cloudflare Access puis revient (protégé)
 //   POST /api/edit/init                       crée les fiches absentes, n'écrase jamais (protégé)
 //   PUT  /api/edit/outils/:id                 modifie une fiche, contrôle de version (protégé)
-//   POST /api/edit/outils/:id/commentaires    ajoute un commentaire (protégé)
+//   POST /api/edit/outils/:id/commentaires    ajoute un commentaire dans D1 (protégé)
+//   GET  /api/edit/reprise-commentaires       simulation de la reprise R2 -> D1, n'écrit rien (protégé)
+//   POST /api/edit/reprise-commentaires       reprise R2 -> D1 : copie, sans doublon, sans rien
+//                                             supprimer de R2 ; peut être relancée sans risque (protégé)
+//
+// Tâche planifiée (wrangler.jsonc > triggers.crons) : supprime de D1 les commentaires plus vieux
+// que DUREE_CONSERVATION_MOIS mois (12 par défaut).
 //
 // Protection : tout ce qui écrit exige un jeton Cloudflare Access valide, vérifié ICI
 // (signature RS256, audience, émetteur, expiration). Si ACCESS_TEAM_DOMAIN ou ACCESS_AUD
@@ -38,6 +51,8 @@ export const LIMITES = {
   listeElement: 200,
   commentaire: 2000,
   initNombre: 500,
+  pageCommentaires: 20,  // commentaires par page sur /api/outils/:id/commentaires
+  purgeLot: 500,         // lignes supprimées par requête lors de la purge
 };
 
 const ID_OUTIL = /^outil-\d{3,6}$/;
@@ -335,7 +350,6 @@ function origineAutorisee(request, env) {
 // ---------- R2 ----------
 
 const cleFiche = (id) => `outils/${id}.json`;
-const prefixeCommentaires = (id) => `commentaires/${id}/`;
 
 async function listerCles(bucket, prefixe) {
   const cles = [];
@@ -353,23 +367,154 @@ async function lireJson(bucket, cle) {
   return objet ? { donnees: await objet.json(), etag: objet.etag } : null;
 }
 
+// Anciens commentaires restés dans R2 (avant le passage à D1). Lecture seule.
+async function anciensCommentairesR2(env) {
+  const cles = await listerCles(env.DATA, 'commentaires/');
+  const objets = await Promise.all(cles.map((c) => lireJson(env.DATA, c)));
+  return objets.filter(Boolean).map((o) => o.donnees);
+}
+
+// Un ancien commentaire R2 est-il bien formé ? (la reprise ignore les autres, sans rien casser)
+function commentaireR2Valide(c) {
+  return (
+    c && typeof c === 'object' &&
+    typeof c.id === 'string' && /^[0-9a-f-]{36}$/.test(c.id) &&
+    typeof c.outilId === 'string' && ID_OUTIL.test(c.outilId) &&
+    typeof c.texte === 'string' && c.texte.length > 0 && c.texte.length <= LIMITES.commentaire &&
+    typeof c.auteur === 'string' && c.auteur.length > 0 &&
+    typeof c.creeLe === 'string' && !Number.isNaN(Date.parse(c.creeLe))
+  );
+}
+
+// ---------- D1 ----------
+
+// Ligne SQL -> objet renvoyé à la page (mêmes noms qu'avant : outilId, creeLe).
+const versCommentaire = (l) => ({ id: l.id, outilId: l.outil_id, texte: l.texte, auteur: l.auteur, creeLe: l.cree_le });
+
+// Date limite de conservation : maintenant moins N mois (N = DUREE_CONSERVATION_MOIS, 12 par défaut).
+export function dateLimite(env, maintenant = new Date()) {
+  const n = Number.parseInt(env.DUREE_CONSERVATION_MOIS ?? '12', 10);
+  const mois = Number.isInteger(n) && n > 0 ? n : 12;
+  const d = new Date(maintenant.getTime());
+  d.setUTCMonth(d.getUTCMonth() - mois);
+  return d.toISOString();
+}
+
+// Curseur de pagination : « commentaires plus anciens que (creeLe, id) ». Opaque pour la page.
+function encoderCurseur(l) {
+  return btoa(JSON.stringify([l.cree_le, l.id])).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function decoderCurseur(valeur) {
+  try {
+    const [creeLe, id] = JSON.parse(new TextDecoder().decode(base64url(valeur)));
+    if (typeof creeLe === 'string' && typeof id === 'string' && creeLe.length <= 40 && id.length <= 40) {
+      return { creeLe, id };
+    }
+  } catch { /* curseur illisible */ }
+  throw new Invalide('avant : curseur invalide');
+}
+
+// GET /api/outils/:id/commentaires[?avant=<curseur>] : 20 commentaires, du plus récent au plus ancien.
+async function listerCommentaires(env, id, avant) {
+  const limite = LIMITES.pageCommentaires;
+  const curseur = avant ? decoderCurseur(avant) : null;
+  // On lit un commentaire de plus que la page pour savoir s'il en reste après.
+  const requete = curseur
+    ? env.DB.prepare(
+      `SELECT id, outil_id, texte, auteur, cree_le FROM commentaires
+       WHERE outil_id = ?1 AND (cree_le < ?2 OR (cree_le = ?2 AND id < ?3))
+       ORDER BY cree_le DESC, id DESC LIMIT ?4`,
+    ).bind(id, curseur.creeLe, curseur.id, limite + 1)
+    : env.DB.prepare(
+      `SELECT id, outil_id, texte, auteur, cree_le FROM commentaires
+       WHERE outil_id = ?1
+       ORDER BY cree_le DESC, id DESC LIMIT ?2`,
+    ).bind(id, limite + 1);
+  const { results } = await requete.all();
+  const page = results.slice(0, limite);
+  const suivant = results.length > limite ? encoderCurseur(page[page.length - 1]) : null;
+  return json({ outilId: id, commentaires: page.map(versCommentaire), suivant });
+}
+
+// Tâche planifiée : supprime par lots les commentaires D1 plus vieux que la date limite.
+export async function purgerCommentaires(env, maintenant = new Date()) {
+  const limite = dateLimite(env, maintenant);
+  const suppression = env.DB.prepare(
+    `DELETE FROM commentaires WHERE id IN (
+       SELECT id FROM commentaires WHERE cree_le < ?1 LIMIT ?2
+     )`,
+  ).bind(limite, LIMITES.purgeLot);
+  let total = 0;
+  for (;;) {
+    const { meta } = await suppression.run();
+    total += meta.changes;
+    if (meta.changes < LIMITES.purgeLot) break;
+  }
+  return { supprimes: total, avant: limite };
+}
+
+// Reprise unique R2 -> D1. Copie seulement ; R2 n'est jamais modifié ni vidé.
+// INSERT OR IGNORE + même id que dans R2 : relancer la reprise ne crée aucun doublon.
+async function repriseCommentaires(env, executer) {
+  const anciens = await anciensCommentairesR2(env);
+  const valides = anciens.filter(commentaireR2Valide);
+  const limite = dateLimite(env);
+  const aReprendre = valides.filter((c) => c.creeLe >= limite); // les trop vieux seraient purgés aussitôt
+  // Une seule requête : la liste des id est passée en paramètre (texte JSON), lue par json_each.
+  const { results: presents } = await env.DB.prepare(
+    'SELECT COUNT(*) AS n FROM commentaires WHERE id IN (SELECT value FROM json_each(?1))',
+  ).bind(JSON.stringify(aReprendre.map((c) => c.id))).all();
+  const dejaDansD1 = presents[0].n;
+  const bilan = {
+    simulation: !executer,
+    dansR2: anciens.length,
+    invalides: anciens.length - valides.length,
+    tropAnciens: valides.length - aReprendre.length,
+    dejaDansD1,
+    aCopier: aReprendre.length - dejaDansD1,
+    copies: 0,
+  };
+  if (!executer || aReprendre.length === 0) return json(bilan);
+
+  const insertion = env.DB.prepare(
+    `INSERT OR IGNORE INTO commentaires (id, outil_id, texte, auteur, cree_le)
+     VALUES (?1, ?2, ?3, ?4, ?5)`,
+  );
+  for (let i = 0; i < aReprendre.length; i += 50) {
+    const lot = aReprendre.slice(i, i + 50).map((c) => insertion.bind(c.id, c.outilId, c.texte, c.auteur, c.creeLe));
+    const resultats = await env.DB.batch(lot);
+    for (const r of resultats) bilan.copies += r.meta.changes;
+  }
+  return json(bilan);
+}
+
 // ---------- Routes ----------
 
 async function lireTout(env) {
-  const [clesFiches, clesCommentaires] = await Promise.all([
+  const limite = dateLimite(env);
+  const [clesFiches, anciens, { results: lignes }] = await Promise.all([
     listerCles(env.DATA, 'outils/'),
-    listerCles(env.DATA, 'commentaires/'),
+    anciensCommentairesR2(env),
+    env.DB.prepare(
+      'SELECT id, outil_id, texte, auteur, cree_le FROM commentaires WHERE cree_le >= ?1 ORDER BY cree_le',
+    ).bind(limite).all(),
   ]);
-  const [fiches, commentaires] = await Promise.all([
-    Promise.all(clesFiches.map((c) => lireJson(env.DATA, c))),
-    Promise.all(clesCommentaires.map((c) => lireJson(env.DATA, c))),
-  ]);
+  const fiches = await Promise.all(clesFiches.map((c) => lireJson(env.DATA, c)));
   const parFiche = {};
   for (const f of fiches) if (f) parFiche[f.donnees.outilId] = f.donnees;
+  // D1 d'abord ; un ancien commentaire R2 déjà repris (même id) n'est pas compté deux fois.
+  // Les anciens de R2 plus vieux que la durée de conservation ne sont plus affichés.
   const parOutil = {};
-  for (const c of commentaires) {
-    if (!c) continue;
-    (parOutil[c.donnees.outilId] ||= []).push(c.donnees);
+  const vus = new Set();
+  for (const c of lignes.map(versCommentaire)) {
+    vus.add(c.id);
+    (parOutil[c.outilId] ||= []).push(c);
+  }
+  for (const c of anciens) {
+    if (!commentaireR2Valide(c) || vus.has(c.id) || c.creeLe < limite) continue;
+    vus.add(c.id);
+    (parOutil[c.outilId] ||= []).push(c);
   }
   for (const liste of Object.values(parOutil)) liste.sort((a, b) => a.creeLe.localeCompare(b.creeLe));
   const turnstile = editionConfiguree(env) && etatTurnstile(env) === 'actif'
@@ -454,13 +599,16 @@ async function commenter(request, env, utilisateur, id) {
   if (!(await env.DATA.head(cleFiche(id)))) {
     return erreur(404, "Fiche absente : lancez d'abord l'initialisation.");
   }
-  const creeLe = new Date().toISOString();
-  const commentaireId = crypto.randomUUID();
-  const commentaire = { id: commentaireId, outilId: id, texte: contenu, auteur: utilisateur.email, creeLe };
-  await env.DATA.put(`${prefixeCommentaires(id)}${commentaireId}.json`, JSON.stringify(commentaire), {
-    onlyIf: new Headers({ 'if-none-match': '*' }),
-    httpMetadata: { contentType: 'application/json' },
-  });
+  const commentaire = {
+    id: crypto.randomUUID(),
+    outilId: id,
+    texte: contenu,
+    auteur: utilisateur.email,
+    creeLe: new Date().toISOString(),
+  };
+  await env.DB.prepare(
+    'INSERT INTO commentaires (id, outil_id, texte, auteur, cree_le) VALUES (?1, ?2, ?3, ?4, ?5)',
+  ).bind(commentaire.id, commentaire.outilId, commentaire.texte, commentaire.auteur, commentaire.creeLe).run();
   return json({ commentaire }, 201);
 }
 
@@ -478,6 +626,13 @@ export async function traiter(request, env) {
     return lireTout(env);
   }
 
+  const lecture = pathname.match(/^\/api\/outils\/([^/]+)\/commentaires$/);
+  if (lecture) {
+    if (methode !== 'GET') return erreur(405, 'Méthode non autorisée.');
+    if (!ID_OUTIL.test(lecture[1])) return erreur(400, 'Identifiant d’outil invalide.');
+    return listerCommentaires(env, lecture[1], searchParams.get('avant'));
+  }
+
   if (!pathname.startsWith('/api/edit/')) return erreur(404, 'Introuvable.');
 
   if (methode !== 'GET' && !origineAutorisee(request, env)) return erreur(403, 'Origine refusée.');
@@ -492,6 +647,9 @@ export async function traiter(request, env) {
   }
   if (pathname === '/api/edit/init' && methode === 'POST') {
     return initialiser(request, env, utilisateur);
+  }
+  if (pathname === '/api/edit/reprise-commentaires' && (methode === 'GET' || methode === 'POST')) {
+    return repriseCommentaires(env, methode === 'POST');
   }
   const m = pathname.match(/^\/api\/edit\/outils\/([^/]+)(\/commentaires)?$/);
   if (m) {
@@ -514,5 +672,11 @@ export default {
       if (e instanceof Invalide) return erreur(400, e.message);
       return erreur(500, 'Erreur interne.');
     }
+  },
+
+  // Appelée chaque jour par Cloudflare (wrangler.jsonc > triggers.crons).
+  async scheduled(controleur, env) {
+    const r = await purgerCommentaires(env, new Date(controleur.scheduledTime));
+    console.log(`Purge : ${r.supprimes} commentaire(s) antérieur(s) au ${r.avant} supprimé(s) de D1.`);
   },
 };
