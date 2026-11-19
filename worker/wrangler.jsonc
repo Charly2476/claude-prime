@@ -32,7 +32,7 @@
     {
       "binding": "DB",
       "database_name": "projet-db",
-      "database_id": "Base#1",
+      "database_id": "dd74418e-aefd-4ee7-b822-7fcf18af953f",
       "migrations_dir": "migrations"
     }
   ],
