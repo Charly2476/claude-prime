@@ -2,7 +2,7 @@
   "name": "claude-prime-api",
   "version": "1.0.0",
   "private": true,
-  "description": "Worker Cloudflare qui enregistre les fiches et commentaires de outils.html dans R2",
+  "description": "Worker Cloudflare : fiches de outils.html dans R2, commentaires dans D1",
   "type": "module",
   "scripts": {
     "test": "node --test test/api.test.mjs",

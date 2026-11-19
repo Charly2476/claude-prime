@@ -1,18 +1,20 @@
-// Tests de l'API (Worker exécuté en local dans Miniflare, avec un R2 simulé en mémoire).
+// Tests de l'API (Worker exécuté en local dans Miniflare, avec un R2 et une base D1 simulés en mémoire).
 // Les jetons Cloudflare Access sont signés par une clé RSA générée pour le test :
 // aucun secret réel n'est utilisé.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { webcrypto as crypto } from 'node:crypto';
+import { webcrypto as crypto, randomUUID } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { Miniflare } from 'miniflare';
+import { appliquerMigrations } from './d1.mjs';
 
 const EQUIPE = 'equipe-test.cloudflareaccess.com';
 const AUD = 'a1b2c3d4'.repeat(8);
 const SITE = 'https://claude-prime-test.pages.dev';
 const SCRIPT = fileURLToPath(new URL('../index.js', import.meta.url));
 
-let mf, mfSansAccess, mfTurnstile, mfDemiTurnstile, cle, autreCle;
+let mf, mfSansAccess, mfTurnstile, mfDemiTurnstile, mfD1, cle, autreCle;
 
 const b64url = (buf) => Buffer.from(buf).toString('base64url');
 
@@ -40,6 +42,7 @@ function creerMiniflare(bindings) {
     scriptPath: SCRIPT,
     compatibilityDate: '2026-07-01',
     r2Buckets: ['DATA'],
+    d1Databases: ['DB'],
     bindings,
     // Remplace l'appel réseau vers les certificats Access par la clé publique de test.
     outboundService: async (requete) => {
@@ -104,6 +107,8 @@ before(async () => {
   };
   mfTurnstile = creerMiniflare({ ...prod, TURNSTILE_SECRET_KEY: 'secret-de-test' });
   mfDemiTurnstile = creerMiniflare(prod); // clé publique sans secret
+  mfD1 = creerMiniflare({ ACCESS_TEAM_DOMAIN: EQUIPE, ACCESS_AUD: AUD, DUREE_CONSERVATION_MOIS: '12' });
+  for (const m of [mf, mfSansAccess, mfTurnstile, mfDemiTurnstile, mfD1]) await appliquerMigrations(m);
 });
 
 after(async () => {
@@ -111,6 +116,7 @@ after(async () => {
   await mfSansAccess.dispose();
   await mfTurnstile.dispose();
   await mfDemiTurnstile.dispose();
+  await mfD1.dispose();
 });
 
 test('sans protection configurée : lecture OK, édition désactivée (503)', async () => {
@@ -326,14 +332,14 @@ test('envois invalides refusés (400/403/404), rien écrit', async () => {
   assert.equal(relue.commentaires[A].length, 2);
 });
 
-test('R2 : une fiche par outil dans outils/, un objet par commentaire dans commentaires/<outilId>/', async () => {
+test('stockage : fiches dans R2 (outils/), nouveaux commentaires dans D1 seulement', async () => {
   const cles = (await (await mf.getR2Bucket('DATA')).list()).objects.map((o) => o.key);
-  assert.ok(cles.includes('outils/outil-001.json'));
-  assert.ok(cles.includes('outils/outil-002.json'));
-  const coms = cles.filter((c) => c.startsWith('commentaires/'));
-  assert.equal(coms.length, 2);
-  for (const c of coms) assert.match(c, /^commentaires\/outil-001\/[0-9a-f-]{36}\.json$/);
-  assert.equal(cles.length, 4);
+  assert.deepEqual(cles.sort(), ['outils/outil-001.json', 'outils/outil-002.json']);
+  const db = await mf.getD1Database('DB');
+  const { results } = await db.prepare('SELECT outil_id, texte, auteur FROM commentaires ORDER BY cree_le').all();
+  assert.deepEqual(results.map((l) => l.outil_id), [A, A]);
+  assert.equal(results[1].texte, 'Deuxième sur A');
+  assert.equal(results[0].auteur, 'charles@example.test');
 });
 
 test('Turnstile à moitié réglé (clé publique sans secret) : édition désactivée', async () => {
@@ -374,4 +380,135 @@ test('ALLOWED_ORIGIN et Turnstile : en plus de Access, pas à la place', async (
   assert.equal(relue.fiches[A].champs.usage, 'via Turnstile');
   assert.equal(relue.fiches[A].version, 2);
   assert.equal(relue.commentaires[A].length, 1);
+});
+
+// ---------- D1 : pagination, requêtes paramétrées, purge, reprise ----------
+
+const ilYa = (mois, jours = 0) => {
+  const d = new Date();
+  d.setUTCMonth(d.getUTCMonth() - mois);
+  d.setUTCDate(d.getUTCDate() - jours);
+  return d.toISOString();
+};
+
+async function insererD1(instance, lignes) {
+  const db = await instance.getD1Database('DB');
+  const ins = db.prepare('INSERT INTO commentaires (id, outil_id, texte, auteur, cree_le) VALUES (?1, ?2, ?3, ?4, ?5)');
+  await db.batch(lignes.map((l) => ins.bind(l.id ?? randomUUID(), l.outilId, l.texte, l.auteur ?? 'x@example.test', l.creeLe)));
+  return db;
+}
+
+test('GET /api/outils/:id/commentaires : 20 derniers, puis pages suivantes, sans trou ni doublon', async () => {
+  const base = Date.parse('2026-11-01T10:00:00.000Z');
+  const lignes = Array.from({ length: 45 }, (_, i) => ({
+    outilId: 'outil-010',
+    texte: `c${i}`,
+    // Deux commentaires par seconde : teste le départage par id quand la date est identique.
+    creeLe: new Date(base + Math.floor(i / 2) * 1000).toISOString(),
+  }));
+  lignes.push({ outilId: 'outil-011', texte: 'autre outil', creeLe: new Date(base + 999999).toISOString() });
+  await insererD1(mfD1, lignes);
+
+  const vus = [];
+  let curseur = null;
+  const tailles = [];
+  do {
+    const r = await appel('GET', `/api/outils/outil-010/commentaires${curseur ? `?avant=${curseur}` : ''}`, { instance: mfD1, auth: false });
+    assert.equal(r.statut, 200);
+    tailles.push(r.d.commentaires.length);
+    vus.push(...r.d.commentaires);
+    curseur = r.d.suivant;
+  } while (curseur);
+  assert.deepEqual(tailles, [20, 20, 5]);
+  assert.equal(new Set(vus.map((c) => c.id)).size, 45);
+  assert.ok(vus.every((c) => c.outilId === 'outil-010'));
+  // Du plus récent au plus ancien.
+  for (let i = 1; i < vus.length; i++) assert.ok(vus[i - 1].creeLe >= vus[i].creeLe);
+  assert.equal(vus[0].creeLe, lignes[44].creeLe);
+  assert.deepEqual(Object.keys(vus[0]).sort(), ['auteur', 'creeLe', 'id', 'outilId', 'texte']);
+
+  const vide = await appel('GET', '/api/outils/outil-012/commentaires', { instance: mfD1, auth: false });
+  assert.deepEqual(vide.d, { outilId: 'outil-012', commentaires: [], suivant: null });
+  assert.equal((await appel('GET', '/api/outils/outil-010/commentaires?avant=nimporte', { instance: mfD1, auth: false })).statut, 400);
+  assert.equal((await appel('GET', '/api/outils/pas-un-id/commentaires', { instance: mfD1, auth: false })).statut, 400);
+  assert.equal((await appel('POST', '/api/outils/outil-010/commentaires', { instance: mfD1, auth: false, corps: { texte: 'x' } })).statut, 405);
+});
+
+test('requêtes paramétrées : un texte « SQL » est stocké tel quel, la table reste intacte', async () => {
+  await appel('POST', '/api/edit/init', { instance: mfD1, corps: { fiches: [ficheBase('outil-020', 'Outil 20', 'https://o20.test')] } });
+  const piege = "'); DROP TABLE commentaires; -- \" OR 1=1 ?1 $1";
+  const r = await appel('POST', '/api/edit/outils/outil-020/commentaires', { instance: mfD1, corps: { texte: piege } });
+  assert.equal(r.statut, 201);
+  const lu = await appel('GET', '/api/outils/outil-020/commentaires', { instance: mfD1, auth: false });
+  assert.equal(lu.d.commentaires[0].texte, piege);
+  const page10 = await appel('GET', '/api/outils/outil-010/commentaires', { instance: mfD1, auth: false });
+  assert.equal(page10.d.commentaires.length, 20);
+
+  // Contrôle du code : aucune valeur insérée dans le texte SQL (pas de ${...} ni de + dans prepare()).
+  const code = await readFile(SCRIPT, 'utf8');
+  const prepares = [...code.matchAll(/\.prepare\(\s*([`'"])([\s\S]*?)\1\s*,?\s*\)/g)];
+  assert.ok(prepares.length >= 6, `requêtes trouvées : ${prepares.length}`);
+  for (const [, , sql] of prepares) assert.ok(!sql.includes('${'), sql);
+  assert.equal((code.match(/\.prepare\(/g) || []).length, prepares.length, 'prepare() avec un texte non littéral');
+});
+
+test('tâche planifiée : supprime les commentaires de plus de 12 mois, garde les autres, ne touche pas R2', async () => {
+  const vieux = randomUUID();
+  const recent = randomUUID();
+  const db = await insererD1(mfD1, [
+    { id: vieux, outilId: 'outil-030', texte: 'vieux', creeLe: ilYa(12, 2) },
+    { id: recent, outilId: 'outil-030', texte: 'récent', creeLe: ilYa(11, 20) },
+  ]);
+  const r2Avant = (await (await mfD1.getR2Bucket('DATA')).list()).objects.length;
+  const avant = (await db.prepare('SELECT COUNT(*) AS n FROM commentaires').first()).n;
+
+  const worker = await mfD1.getWorker();
+  await worker.scheduled({ scheduledTime: new Date(), cron: '17 3 * * *' });
+
+  assert.equal(await db.prepare('SELECT id FROM commentaires WHERE id = ?1').bind(vieux).first(), null);
+  assert.ok(await db.prepare('SELECT id FROM commentaires WHERE id = ?1').bind(recent).first());
+  assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM commentaires').first()).n, avant - 1);
+  assert.equal((await (await mfD1.getR2Bucket('DATA')).list()).objects.length, r2Avant);
+});
+
+test('reprise R2 -> D1 : simulation sans écriture, puis copie unique, sans doublon, R2 intact', async () => {
+  const bucket = await mfD1.getR2Bucket('DATA');
+  await appel('POST', '/api/edit/init', { instance: mfD1, corps: { fiches: [ficheBase('outil-040', 'Outil 40', 'https://o40.test')] } });
+  const ancien = (texte, creeLe, extra = {}) => ({ id: randomUUID(), outilId: 'outil-040', texte, auteur: 'ancien@example.test', creeLe, ...extra });
+  const anciens = [
+    ancien('ancien 1', ilYa(2)),
+    ancien('ancien 2', ilYa(1)),
+    ancien('trop vieux', ilYa(13)),
+    ancien('', ilYa(1)), // invalide : texte vide
+  ];
+  const dejaRepris = ancien('déjà dans D1', ilYa(3));
+  anciens.push(dejaRepris);
+  for (const c of anciens) await bucket.put(`commentaires/outil-040/${c.id}.json`, JSON.stringify(c));
+  await insererD1(mfD1, [dejaRepris]);
+  const clesR2 = async () => (await bucket.list({ prefix: 'commentaires/' })).objects.map((o) => o.key).sort();
+  const r2Avant = await clesR2();
+
+  // Avant la reprise, la page voit déjà les anciens (lus dans R2), sans doublon ni trop vieux.
+  const vue = async () => (await appel('GET', '/api/outils', { instance: mfD1, auth: false })).d.commentaires['outil-040'].map((c) => c.texte).sort();
+  assert.deepEqual(await vue(), ['ancien 1', 'ancien 2', 'déjà dans D1']);
+
+  assert.equal((await appel('GET', '/api/edit/reprise-commentaires', { instance: mfD1, auth: false })).statut, 401);
+  const simulation = await appel('GET', '/api/edit/reprise-commentaires', { instance: mfD1 });
+  assert.deepEqual(simulation.d, { simulation: true, dansR2: 5, invalides: 1, tropAnciens: 1, dejaDansD1: 1, aCopier: 2, copies: 0 });
+  const lire040 = async () => (await appel('GET', '/api/outils/outil-040/commentaires', { instance: mfD1, auth: false })).d.commentaires;
+  assert.equal((await lire040()).length, 1, 'la simulation n’écrit rien');
+
+  const reprise = await appel('POST', '/api/edit/reprise-commentaires', { instance: mfD1 });
+  assert.equal(reprise.statut, 200);
+  assert.equal(reprise.d.copies, 2);
+  const relance = await appel('POST', '/api/edit/reprise-commentaires', { instance: mfD1 });
+  assert.equal(relance.d.copies, 0);
+  assert.equal(relance.d.dejaDansD1, 3);
+
+  const d1 = await lire040();
+  assert.deepEqual(d1.map((c) => c.texte), ['ancien 2', 'ancien 1', 'déjà dans D1']);
+  assert.equal(d1.find((c) => c.texte === 'ancien 1').auteur, 'ancien@example.test');
+  assert.deepEqual(await vue(), ['ancien 1', 'ancien 2', 'déjà dans D1']);
+  assert.deepEqual(await clesR2(), r2Avant, 'rien supprimé ni modifié dans R2');
+  assert.equal((await appel('POST', '/api/edit/reprise-commentaires', { instance: mfD1, entetes: { origin: 'https://evil.test' } })).statut, 403);
 });

@@ -14,6 +14,7 @@ import { webcrypto as crypto } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { join, normalize } from 'node:path';
 import { Miniflare } from 'miniflare';
+import { appliquerMigrations } from './d1.mjs';
 
 const require = createRequire(import.meta.url);
 let chromium;
@@ -37,7 +38,7 @@ async function jeton(email = 'charles@example.test') {
 
 function miniflare(bindings, jwk) {
   return new Miniflare({
-    modules: true, scriptPath: SCRIPT, compatibilityDate: '2026-07-01', r2Buckets: ['DATA'], bindings,
+    modules: true, scriptPath: SCRIPT, compatibilityDate: '2026-07-01', r2Buckets: ['DATA'], d1Databases: ['DB'], bindings,
     outboundService: (r) => r.url.endsWith('/cdn-cgi/access/certs')
       ? new Response(JSON.stringify({ keys: [jwk] }))
       : new Response('bloqué', { status: 599 }),
@@ -99,6 +100,8 @@ before(async () => {
   const jwk = { kty: pub.kty, n: pub.n, e: pub.e, kid: 'k1', alg: 'RS256' };
   mf = miniflare({ ACCESS_TEAM_DOMAIN: EQUIPE, ACCESS_AUD: AUD }, jwk);
   mfSansAccess = miniflare({}, jwk);
+  await appliquerMigrations(mf);
+  await appliquerMigrations(mfSansAccess);
   serveur = await demarrerSite(mf);
   serveurSansAccess = await demarrerSite(mfSansAccess);
   navigateur = await chromium.launch();

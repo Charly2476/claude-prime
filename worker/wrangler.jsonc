@@ -20,11 +20,32 @@
   "keep_vars": true,
 
   // DATA = le câble entre le Worker et le bucket R2.
+  // Les fiches outils restent dans R2.
   "r2_buckets": [
     { "binding": "DATA", "bucket_name": "formation-s4-donnees-mon-groupe" }
   ],
 
+  // DB = le câble entre le Worker et la base D1 des commentaires.
+  // database_id n'est pas un secret : c'est l'identifiant affiché dans
+  // Storage & Databases > D1 > projet-db (un UUID du type 0a1b2c3d-...).
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "projet-db",
+      "database_id": "Base#1",
+      "migrations_dir": "migrations"
+    }
+  ],
+
+  // Tâche planifiée quotidienne (heure UTC) : supprime de D1 les commentaires
+  // plus vieux que DUREE_CONSERVATION_MOIS. R2 n'est jamais touché.
+  "triggers": {
+    "crons": ["17 3 * * *"]
+  },
+
   "vars": {
+    // Durée de conservation des commentaires dans D1 (12 mois).
+    "DUREE_CONSERVATION_MOIS": "12",
     "ALLOWED_ORIGIN": "https://claude-prime-c6r.pages.dev",
     "TURNSTILE_HOSTNAME": "claude-prime-c6r.pages.dev",
     "TURNSTILE_ACTION": "soumission",
