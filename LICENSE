@@ -1,31 +1,40 @@
 Licences du projet claude-prime
 ================================
 
-Ce dépôt contient deux types de contenus, sous deux licences différentes :
+Ce dépôt contient deux types de contenus, sous deux régimes différents :
 
 1. Le code source (fichiers HTML, CSS, JavaScript, SQL, configuration et
    tests, dont les dossiers worker/, functions/ et .github/) : licence MIT,
-   texte complet ci-dessous.
+   texte complet ci-dessous. La licence MIT couvre le code et le balisage,
+   mais pas les contenus éditoriaux décrits au point 2, même lorsqu'ils
+   figurent dans un fichier HTML (par exemple outils.html).
 
-2. Les contenus éditoriaux (textes, sélection et descriptions des fiches
-   outils, documentation) : licence Creative Commons Attribution 4.0
-   International (CC BY 4.0).
-   https://creativecommons.org/licenses/by/4.0/legalcode.fr
+2. Les contenus éditoriaux (textes, sélection, organisation et descriptions
+   des fiches outils, documentation) : © 2026 Charly2476, tous droits
+   réservés. Aucune licence n'est accordée sur ces contenus. Toute
+   reproduction, représentation, adaptation ou extraction, totale ou
+   partielle, sans autorisation écrite préalable est interdite, sous réserve
+   des exceptions prévues par la loi (notamment la courte citation avec
+   mention de la source, art. L. 122-5 du Code de la propriété
+   intellectuelle). La sélection et l'organisation des fiches sont également
+   protégées au titre des bases de données (art. L. 112-3 et L. 341-1 du
+   Code de la propriété intellectuelle).
 
 Les marques, noms de produits et sites tiers cités dans les fiches
-appartiennent à leurs titulaires respectifs et ne sont pas couverts par ces
-licences. Les dépendances tierces restent soumises à leurs propres licences.
+appartiennent à leurs titulaires respectifs et ne sont pas couverts par ce
+fichier. Les dépendances tierces restent soumises à leurs propres licences.
 
 Réserve de fouille de textes et de données : conformément à l'article
 L. 122-5-3 du Code de la propriété intellectuelle et à l'article 4 de la
-directive (UE) 2019/790, le titulaire des droits s'oppose à la fouille de
-textes et de données des contenus de ce projet à des fins d'entraînement de
-modèles d'intelligence artificielle, dans la mesure permise par les licences
-ci-dessus et par la loi.
+directive (UE) 2019/790, le titulaire des droits s'oppose expressément à la
+fouille de textes et de données des contenus éditoriaux de ce projet, y
+compris à des fins d'entraînement de modèles d'intelligence artificielle.
+
+Demandes d'autorisation : via le dépôt GitHub Charly2476/claude-prime.
 
 --------------------------------------------------------------------------------
 
-MIT License
+MIT License (code source uniquement)
 
 Copyright (c) 2026 Charly2476
 
